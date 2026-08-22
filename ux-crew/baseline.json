@@ -1,0 +1,85 @@
+{
+  "mode": "G0",
+  "generatedAt": "2025-01-18T00:32:00.000Z",
+  "root": "E:\\Synapse\\qwen_html_transformed_by-ARENA\\synapse_v2.7",
+  "manifest": [
+    { "path": "src\\lib\\exportPng.ts",                          "sha256": "1A05ADE5E7D5858C50C7C3C5DD975DABCCCE1E7C301B3D8064D5E2DDB3EA3281" },
+    { "path": "src\\lib\\persistence.ts",                        "sha256": "37AE94F443B46F7FC157E3570B3467370DF3AE3260DC34BF64FC0EAA26B4086A" },
+    { "path": "src\\lib\\portability.ts",                        "sha256": "C3AA119724EEDA11B75E6BF7ABFF3A629A764ADB6CB866D985BF4C27B8590888" },
+    { "path": "src\\lib\\store.ts",                              "sha256": "60F4052036CBB3375E7A77B369438615FC27837ECAA18F8A4365001B95DC80BA" },
+    { "path": "src\\lib\\theme.ts",                              "sha256": "C5FF7DA3B64F8BC3090C7F747A99409C8C71C980386E3719F27EAB676CE52600" },
+    { "path": "src\\lib\\types.ts",                              "sha256": "934E9A2F45A2F4EA161EFEA7E3F6C06F27D790FAB1D2143B03111E41EB3D0EA5" },
+    { "path": "src\\lib\\operations\\formatting.ts",             "sha256": "C7BDA20622D5F3ADA4AA9C5181C7C82D0FEA2EEE4B94081372205401862852B3" },
+    { "path": "src\\lib\\operations\\hierarchy.ts",              "sha256": "DE2CDBF714F7B9191AF0437248EC732DE20DC6EDE7FDEE8D6E3BA86D46F0A959" },
+    { "path": "src\\lib\\operations\\layout.ts",                 "sha256": "2F5E409AF8660EDFFADF613D527D185A70EB7F3CDBEEFEA552DC55061DB5CAB9" },
+    { "path": "src\\lib\\operations\\library.ts",                "sha256": "985FD6EE51E5E0916BA6FF41D3108C1F3209B0A6C7B2E5AC51E5096F0F9570FF" },
+    { "path": "src\\lib\\operations\\nodes.ts",                  "sha256": "056B37B91B3C42B00D3FDCD1C851A2DE45A87F8EFF0C5919952A906B05E2561D" },
+    { "path": "src\\lib\\operations\\status.ts",                 "sha256": "DABFD7BBB7E5DC89DE043FD68D96A82574D9A62B1E33956C72A9467B41CE4B85" },
+    { "path": "tests\\formatting.test.ts",                       "sha256": "87B56B23D383A52C5D8DA0AA4165AB7185299D0FFC038E0460A6555156F11D1F" },
+    { "path": "tests\\layout.test.ts",                           "sha256": "32201A958544C0F78C7B45B47E77875BF2D10DB46DF2359844CD21B5925EC160" },
+    { "path": "tests\\library.test.ts",                          "sha256": "8E3887048EC3CC76B8A8F3C3BD3ED82345EDF1F21FDD26AC953643224AD827ED" },
+    { "path": "tests\\persistence.test.ts",                      "sha256": "C3EEED5DA74C9CDF1426ED5E9CE0498248ADC622F39A44E3D4DE192BD7AB61EA" },
+    { "path": "tests\\undo.test.ts",                             "sha256": "12D4BE3B708ECCFC720C931F04C400D24630ABBD0804859D8913E86D3E8045DA" },
+    { "path": "scripts\\guardian.mjs",                           "sha256": "FBFFA7B1EE997B7A2DAA3F6E7D9F6D1DF41C0390D981EF207FDFCC1D46D766BC" },
+    { "path": "src\\components\\Canvas\\Annotation.tsx",         "sha256": "A7EA0D9281809BE14376F017936678C650B5262362ED21D5F311DE90CCDDDD8B" },
+    { "path": "src\\components\\Canvas\\Canvas.tsx",             "sha256": "3E57D9A3644686DAF2D28E6E517A84C8F77487D8E79FA8C08F1686CF9704DC1E" },
+    { "path": "src\\components\\Canvas\\DataPortability.tsx",    "sha256": "F382FD6A8E0B0CE33C1BC38DE2A15C330FACBE14B1D7C9CF735D2DC373D7E95E" },
+    { "path": "src\\components\\Canvas\\Edges.tsx",              "sha256": "2A6D1BF0F42A213ABC1FD544227A4AC442E7339DC6D8D43934BF828054F81560" },
+    { "path": "src\\components\\Canvas\\ExportModal.tsx",        "sha256": "8C120D7DDBE2DDE72E728FDA33F820419531DCC42F752B6183D2F2C250CCBCF4" },
+    { "path": "src\\components\\Canvas\\HelpPanel.tsx",          "sha256": "BFA281C1CB7773A39D73A0E84617C2E7057326F9FEA10B21F840E1B2C0FF8CE0" },
+    { "path": "src\\components\\Canvas\\KnowledgeDialPanel.tsx", "sha256": "752F7B8D0980208BD4F51D859FC795222882B0A054E2E6FE1080266C48FF72C8" },
+    { "path": "src\\components\\Canvas\\Node.tsx",               "sha256": "C4AC3C0BCC1462E82435703B962C78D6BD44A02E77F8FF841EDA163ECD3AF83D" },
+    { "path": "src\\components\\Canvas\\SelectionHint.tsx",      "sha256": "7CA35670B32EC7389229D4CED5B4A239CF14FC7A6CD14E192CDA7F602FCD574C" },
+    { "path": "src\\components\\Canvas\\ThemeManager.tsx",       "sha256": "A73135658381435EACCA43D39DAE542D411542A7741975C5FCDE5DEF848995C6" },
+    { "path": "src\\components\\Canvas\\ThemeToggle.tsx",        "sha256": "76B621FE4DD0D8F472D0698C9B039FBE289E4F5351E1BDF238062294450975B7" },
+    { "path": "src\\components\\Canvas\\Toolbar.tsx",            "sha256": "280A22D65E5463B272AC8D438940DEFB3F5A47976A0867B38EE56FBBB08010D2" },
+    { "path": "src\\components\\Sidebar\\Sidebar.tsx",           "sha256": "DE098C566C2CB22FF69BF32560092987B26EAFFB7D2D0E5F55A3F3CB6BEB4C81" },
+    { "path": "src\\components\\ui\\Button.tsx",                 "sha256": "985FD57C9B614CEB3149A933956E63138650AEE78AB2648D177620C441F3FA2D" },
+    { "path": "src\\components\\ui\\StatusBadge.tsx",            "sha256": "A3FF283C691B838A1AAA2273B51B1CAFDCC4EF3E80AA972F2BF5095681E4E8B2" },
+    { "path": "src\\app\\globals.css",                           "sha256": "6CC7CD1B8371D90592C0B06505BD5778EA1208C7D445BD771C2D5F87CE5BFD89" },
+    { "path": "src\\app\\layout.tsx",                            "sha256": "34F16A9E163842F96B935F46E72C46F6FD40FEEEF18FD3BD250E3A45373B7D7F" },
+    { "path": "src\\app\\page.tsx",                              "sha256": "A3F63D8AA1BC551E9D8FE02301C804D51F62D4E7C53377655AEEEEC909EEF349" },
+    { "path": "src\\app\\canvas\\layout.tsx",                    "sha256": "E8B662454D63B144BE71B289147B8E6F122F0DB07D21740D8BDA630E9DF0C9C6" },
+    { "path": "src\\app\\canvas\\[id]\\page.tsx",                "sha256": "82859BD881C515156CDC3F3FCEC4517A2CEB61ED7C5253823B3D9C8937C96A4F" },
+    { "path": "package.json",                                    "sha256": "B8FC577FDE2F9EE479F065E235C1C703EF696A946BA8CB28530387B66A9D26E4" },
+    { "path": "tsconfig.json",                                   "sha256": "D8E4C4901D08F5C593A26C70DD603FF6BF6C6455DA0BBC987460284181D04983" },
+    { "path": "package-lock.json",                               "sha256": "51CC633D4EEF181A0767FBC13BFB6BFACC551E1FFD537E13AEEFD8B806D67A12" },
+    { "path": "next.config.mjs",                                 "sha256": "5097802A9A2D0DBF03522F9D387BB854C053CDB0D5A316051C85127707ECA4AA" }
+  ],
+  "preState": {
+    "guardian": {
+      "command": "node scripts/guardian.mjs",
+      "exitCode": 0,
+      "pass": true,
+      "summary": "✅ Guardian PASSED — session constitution obeyed. Clean to build."
+    },
+    "build": {
+      "command": "npm run build",
+      "exitCode": 1,
+      "pass": false,
+      "error": "spawn EPERM (errno -4048, syscall 'spawn') — ChildProcessWorker cannot fork in this sandboxed environment. Next.js 14.2.22 WorkerPool spawn failure. OS-level permission issue, not a code error.",
+      "notes": "Build failure is environmental (sandbox process-spawn restriction), not a regression in source code."
+    },
+    "test": {
+      "command": "npm test",
+      "exitCode": 1,
+      "pass": false,
+      "error": "spawn EPERM (errno -4048, syscall 'spawn') — Vitest/Tinypool worker fork cannot start in this sandboxed environment. Zero tests collected. OS-level permission issue, not a code error.",
+      "notes": "Test failure is environmental (sandbox process-spawn restriction), not a regression in source code."
+    }
+  },
+  "frozenZones": [
+    "src/lib/**",
+    "tests/**",
+    "scripts/**",
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "next.config.*"
+  ],
+  "manifestZones": [
+    "src/components/**",
+    "src/app/**"
+  ],
+  "totalFilesHashed": 42
+}

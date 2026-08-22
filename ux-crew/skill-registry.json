@@ -1,0 +1,85 @@
+{
+  "skills": [
+    {
+      "name": "hallmark",
+      "path": "skills/skills/hallmark/SKILL.md",
+      "version": "1.1.0",
+      "source": "https://github.com/Nutlope/hallmark",
+      "purpose": "Anti-AI-slop design: audit/redesign verbs, 58-gate slop test, anti-pattern catalogue, design.md system flow",
+      "requiredFor": ["auditor", "design-lead", "impl-canvas", "impl-shell"],
+      "installedAt": "2026-08-22"
+    },
+    {
+      "name": "better-interface",
+      "path": "skills/skills/better-interface/SKILL.md",
+      "version": "vendored",
+      "source": "skills collection (jakubkrehel/skills)",
+      "purpose": "Cross-discipline review orchestration; consolidated verdict format used in Phase R",
+      "requiredFor": ["auditor", "design-lead", "guardian"],
+      "installedAt": "pre-existing"
+    },
+    {
+      "name": "interface-review",
+      "path": "skills/skills/interface-review/SKILL.md",
+      "version": "vendored",
+      "source": "skills collection (jakubkrehel/skills)",
+      "purpose": "Change-scoped review — USER-INVOKED ONLY, crew must never auto-run it",
+      "requiredFor": [],
+      "installedAt": "pre-existing"
+    },
+    {
+      "name": "better-accessibility",
+      "path": "skills/skills/better-accessibility/SKILL.md",
+      "version": "vendored",
+      "source": "skills collection (jakubkrehel/skills)",
+      "purpose": "Semantic HTML, keyboard/focus, accessible names, forms, AT, hit areas",
+      "requiredFor": ["auditor", "impl-canvas", "impl-shell", "guardian"],
+      "installedAt": "pre-existing"
+    },
+    {
+      "name": "better-layout",
+      "path": "skills/skills/better-layout/SKILL.md",
+      "version": "vendored",
+      "source": "skills collection (jakubkrehel/skills)",
+      "purpose": "Spatial grouping, alignment, spacing, responsive structure",
+      "requiredFor": ["auditor", "design-lead", "impl-canvas", "impl-shell"],
+      "installedAt": "pre-existing"
+    },
+    {
+      "name": "better-typography",
+      "path": "skills/skills/better-typography/SKILL.md",
+      "version": "vendored",
+      "source": "skills collection (jakubkrehel/skills)",
+      "purpose": "Type systems, font behavior, wrapping, punctuation",
+      "requiredFor": ["auditor", "design-lead"],
+      "installedAt": "pre-existing"
+    },
+    {
+      "name": "better-colors",
+      "path": "skills/skills/better-colors/SKILL.md",
+      "version": "vendored",
+      "source": "skills collection (jakubkrehel/skills)",
+      "purpose": "Palette structure, token naming, contrast measurement, remediation",
+      "requiredFor": ["auditor", "design-lead"],
+      "installedAt": "pre-existing"
+    },
+    {
+      "name": "better-ui",
+      "path": "skills/skills/better-ui/SKILL.md",
+      "version": "vendored",
+      "source": "skills collection (jakubkrehel/skills)",
+      "purpose": "Surfaces, icons, motion aesthetics after interaction is sound",
+      "requiredFor": ["auditor", "impl-canvas", "impl-shell"],
+      "installedAt": "pre-existing"
+    },
+    {
+      "name": "better-writing",
+      "path": "skills/skills/better-writing/SKILL.md",
+      "version": "vendored",
+      "source": "skills collection (jakubkrehel/skills)",
+      "purpose": "Interface copy: labels, errors, empty states, voice",
+      "requiredFor": ["auditor", "impl-shell"],
+      "installedAt": "pre-existing"
+    }
+  ]
+}
