@@ -1,13 +1,28 @@
 'use client';
 import {useCallback,useEffect,useRef,useState,useMemo,type PointerEvent, memo} from 'react';
-import type {Node as NodeType, NodeSize} from '@/lib/types';
+import type {Node as NodeType, NodeSize, NodeStyle} from '@/lib/types';
 import {NODE_MIN_HEIGHT,NODE_TINTS,NODE_WIDTH,STATUS_META,STATUS_ORDER} from '@/lib/types';
 import {statusSummary} from '@/lib/operations/status';
 import {parseFormatting} from '@/lib/operations/formatting';
 import StatusBadge from '../ui/StatusBadge';
 import {useCanvasStore} from '@/lib/store';
 import {PaletteIcon, Plus, DotsThree, Trash} from '@phosphor-icons/react';
-import {isRoot} from '@/lib/operations/hierarchy';
+import {isRoot, getAncestorIds} from '@/lib/operations/hierarchy';
+
+const NODE_STYLES: { id: NodeStyle; label: string }[] = [
+  { id: 'classic', label: 'Classic' },
+  { id: 'sticky', label: 'Sticky' },
+  { id: 'paper', label: 'Paper' },
+  { id: 'highlight', label: 'Highlight' },
+  { id: 'minimal', label: 'Minimal' },
+];
+
+/** Split text into first line and the remaining lines (null if single-line). */
+function splitFirstLine(text: string): { first: string; rest: string | null } {
+  const idx = text.indexOf('\n');
+  if (idx === -1) return { first: text, rest: null };
+  return { first: text.slice(0, idx), rest: text.slice(idx + 1) };
+}
 
 function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string[];viewportZoom:number}) {
   const editing=useCanvasStore(s=>s.editingId);
@@ -15,18 +30,28 @@ function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string
   const isSelected=useCanvasStore(s=>s.selectedNodeIds.includes(node.id));
   const allNodes=useCanvasStore(s=>s.canvas?.nodes??{});
   const canvas=useCanvasStore(s=>s.canvas), selectForInteraction=useCanvasStore(s=>s.selectForInteraction), connectingFrom=useCanvasStore(s=>s.connectingFrom), setConnectingFrom=useCanvasStore(s=>s.setConnectingFrom), setMouseWorld=useCanvasStore(s=>s.setMouseWorld), magneticTarget=useCanvasStore(s=>s.magneticTarget), setMagneticTarget=useCanvasStore(s=>s.setMagneticTarget), createConnection=useCanvasStore(s=>s.createConnection);
-  const update=useCanvasStore(s=>s.update), setEditing=useCanvasStore(s=>s.setEditing), createChild=useCanvasStore(s=>s.createChild), createIndependentTopic=useCanvasStore(s=>s.createIndependentTopic), duplicateNode=useCanvasStore(s=>s.duplicateNode), remove=useCanvasStore(s=>s.remove), setNodeTint=useCanvasStore(s=>s.setNodeTint), moveNodes=useCanvasStore(s=>s.moveNodes), moveNodesLive=useCanvasStore(s=>s.moveNodesLive), setNodeSize=useCanvasStore(s=>s.setNodeSize), toggleNode=useCanvasStore(s=>s.toggleNode);
+  const update=useCanvasStore(s=>s.update), setEditing=useCanvasStore(s=>s.setEditing), createChild=useCanvasStore(s=>s.createChild), createIndependentTopic=useCanvasStore(s=>s.createIndependentTopic), duplicateNode=useCanvasStore(s=>s.duplicateNode), remove=useCanvasStore(s=>s.remove), setNodeTint=useCanvasStore(s=>s.setNodeTint), setNodeStyle=useCanvasStore(s=>s.setNodeStyle), moveNodes=useCanvasStore(s=>s.moveNodes), moveNodesLive=useCanvasStore(s=>s.moveNodesLive), setNodeSize=useCanvasStore(s=>s.setNodeSize), toggleNode=useCanvasStore(s=>s.toggleNode);
   const revealIds=useCanvasStore(s=>s.revealIds);
   const setHoverId=useCanvasStore(s=>s.setHoverId);
   const [draft,setDraft]=useState(node.content); const input=useRef<HTMLTextAreaElement>(null);
   const [menuOpen,setMenuOpen]=useState(false);
   const [paletteOpen,setPaletteOpen]=useState(false);
+  const [styleOpen,setStyleOpen]=useState(false);
   const [preview,setPreview]=useState<NodeSize|null>(null); const size=preview??node.size; const gripStart=useRef<{x:number;y:number;w:number;h:number}|null>(null);
   const cardRef=useRef<HTMLDivElement>(null);
 
   const summary=useMemo(()=>statusSummary(childIds.map(id=>allNodes[id]).filter(Boolean) as NodeType[]),[childIds,allNodes]);
 
+  // Role is derived from hierarchy depth: 0 = main, 1 = child, 2+ = descendant.
+  const depth=useMemo(()=>canvas?getAncestorIds(canvas,node.id).length:0,[canvas,node.id]);
+  const roleClass=depth===0?'role-main':depth===1?'role-child':'role-descendant';
+
   const formattedContent=useMemo(()=>node.content?parseFormatting(node.content):null,[node.content]);
+
+  // Presentational split of the first line vs. body. Storage is untouched.
+  const lineSplit = useMemo(()=> node.content ? splitFirstLine(node.content) : { first: '', rest: null as string | null }, [node.content]);
+  const firstLine = lineSplit.first;
+  const restLines = lineSplit.rest;
 
   useEffect(()=>{
     const el=cardRef.current;
@@ -59,6 +84,12 @@ function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string
     window.addEventListener('keydown', onKey);
     return ()=> window.removeEventListener('keydown', onKey);
   },[menuOpen]);
+  useEffect(()=>{
+    if(!styleOpen) return;
+    const onKey=(e:KeyboardEvent)=>{ if(e.key==='Escape') setStyleOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return ()=> window.removeEventListener('keydown', onKey);
+  },[styleOpen]);
   const save=()=>{setEditing(null);update(c=>{c.nodes[node.id].content=draft;c.nodes[node.id].updatedAt=Date.now()})};
   const cycle=()=>update(c=>{const n=c.nodes[node.id];n.status=STATUS_ORDER[(STATUS_ORDER.indexOf(n.status)+1)%STATUS_ORDER.length]});
   const onGripDown=(e:PointerEvent<HTMLButtonElement>)=>{e.stopPropagation();e.preventDefault();const card=(e.currentTarget as HTMLElement).closest('.node-card') as HTMLElement|null;gripStart.current={x:e.clientX,y:e.clientY,w:node.size?.width??NODE_WIDTH,h:node.size?.height??(card?.offsetHeight||NODE_MIN_HEIGHT)};(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)};
@@ -67,7 +98,8 @@ function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string
   const onGripDblClick=(e:React.MouseEvent)=>{e.stopPropagation();e.preventDefault();if(node.size)update(c=>{c.nodes[node.id].size=null;c.nodes[node.id].updatedAt=Date.now()})};
   const wrapSelection=(before:string,after:string)=>{const el=input.current;if(!el)return;const s=el.selectionStart??0,e=el.selectionEnd??0,sel=el.value.slice(s,e);setDraft(el.value.slice(0,s)+before+sel+after+el.value.slice(e));requestAnimationFrame(()=>{el.focus();el.setSelectionRange(s+before.length,e+before.length)})};
   const renderFormatted=(text:string)=>{const spans=parseFormatting(text);return spans.map((s,i)=>{let n:React.ReactNode=s.text;if(s.italic)n=<em key={i}>{n}</em>;if(s.bold)n=<strong key={i}>{n}</strong>;if(s.underline)n=<u key={i}>{n}</u>;return n;})};
-  const editor=editing===node.id ? <div className="node-editor-wrap" onPointerDownCapture={e=>e.stopPropagation()}><textarea ref={input} className="node-editor" placeholder="What's this about?" spellCheck={false} value={draft} onChange={e=>setDraft(e.target.value)} onBlur={save} onKeyDown={e=>{if((e.ctrlKey||e.metaKey)&&!e.altKey&&(e.key==='b'||e.key==='i'||e.key==='u')){e.preventDefault();e.stopPropagation();if(e.key==='b')wrapSelection('**','**');else if(e.key==='i')wrapSelection('*','*');else wrapSelection('__','__');return;}if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();e.stopPropagation();save()} else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();setEditing(null)}}} onInput={adjustHeight} /></div> : <div className="node-content" onPointerDownCapture={e=>e.stopPropagation()} onClick={()=>setEditing(node.id)}>{formattedContent?renderFormatted(node.content):"What's this about?"}</div>;
+  const styleClass=node.style?`style-${node.style}`:'';
+  const editor=editing===node.id ? <div className="node-editor-wrap" onPointerDownCapture={e=>e.stopPropagation()}><textarea ref={input} className="node-editor" placeholder="What's this about?" spellCheck={false} value={draft} onChange={e=>setDraft(e.target.value)} onBlur={save} onKeyDown={e=>{if((e.ctrlKey||e.metaKey)&&!e.altKey&&(e.key==='b'||e.key==='i'||e.key==='u')){e.preventDefault();e.stopPropagation();if(e.key==='b')wrapSelection('**','**');else if(e.key==='i')wrapSelection('*','*');else wrapSelection('__','__');return;}if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();e.stopPropagation();save()} else if(e.key==='Escape'){e.preventDefault();e.stopPropagation();setEditing(null)}}} onInput={adjustHeight} /></div> : <div className="node-content" onPointerDownCapture={e=>e.stopPropagation()} onClick={()=>setEditing(node.id)}>{formattedContent? <><span className="node-title-line">{renderFormatted(firstLine)}</span>{restLines!=null&&<span className="node-body-line">{renderFormatted(restLines)}</span>}</> : "What's this about?"}</div>;
   const revealIndex=revealIds.indexOf(node.id);
   const isRevealing=revealIndex>=0;
   const cardStyle:React.CSSProperties={left:node.position.x,top:node.position.y, ...(node.tint ? {['--tint' as string]: node.tint} as React.CSSProperties : {})};
@@ -96,7 +128,9 @@ function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string
     if(isDraggingNode.current){const dx=(e.clientX-ds.sx)/viewportZoom,dy=(e.clientY-ds.sy)/viewportZoom;moveNodes(Object.entries(ds.origins).map(([id,orig])=>({id,position:{x:orig.x+dx,y:orig.y+dy}})));}
     isDraggingNode.current=false;
   };
-  return <div ref={cardRef} className={`node-card ${editing===node.id?'is-editing':''} ${just===node.id?'node-enter':''} ${node.tint?'is-tinted':''} ${isSelected?'is-selected':''} ${size?'is-sized':''} ${isRevealing?'node-reveal':''} ${magneticTarget===node.id?'node-magnet-target':''}`} style={cardStyle} onPointerDownCapture={e=>{if(e.button===0&&!isSelected)selectForInteraction(node.id)}} onPointerEnter={e=>{if(window.matchMedia('(hover: hover)').matches)setHoverId(node.id)}} onPointerLeave={()=>{if(window.matchMedia('(hover: hover)').matches)setHoverId(null)}} onPointerDown={onNodeDragStart} onPointerMove={onNodeDragMove} onPointerUp={onNodeDragEnd}>
+  return <div ref={cardRef} className={`node-card ${roleClass} ${styleClass} ${editing===node.id?'is-editing':''} ${just===node.id?'node-enter':''} ${node.tint?'is-tinted':''} ${isSelected?'is-selected':''} ${size?'is-sized':''} ${isRevealing?'node-reveal':''} ${magneticTarget===node.id?'node-magnet-target':''}`} style={cardStyle} onPointerDownCapture={e=>{if(e.button===0&&!isSelected)selectForInteraction(node.id)}} onPointerEnter={e=>{if(window.matchMedia('(hover: hover)').matches)setHoverId(node.id)}} onPointerLeave={()=>{if(window.matchMedia('(hover: hover)').matches)setHoverId(null)}} onPointerDown={onNodeDragStart} onPointerMove={onNodeDragMove} onPointerUp={onNodeDragEnd}>
+    {/* Accent bar for main/root nodes */}
+    {isRoot(node)&&<div className="nc-accent-top" aria-hidden="true" />}
     {/* Contextual more menu — absolute top-right, outside text flow */}
     <div className="node-ctx-controls">
       <button className={`more-btn ${menuOpen?'is-active':''}`} onClick={e=>{e.stopPropagation();setMenuOpen(v=>!v)}} aria-label="Node options" title="Options">
@@ -121,6 +155,10 @@ function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string
           <button className="node-menu-item" onClick={()=>{setMenuOpen(false);setPaletteOpen(true)}}>
             <span className="node-menu-label">Node colour</span>
             <span className="node-menu-arrow" style={{background:node.tint||'#888'}} />
+          </button>
+          <button className="node-menu-item" onClick={()=>{setMenuOpen(false);setStyleOpen(true)}}>
+            <span className="node-menu-label">Node style</span>
+            <span className="node-menu-arrow">{node.style||'classic'}</span>
           </button>
           <div className="node-menu-sep" />
           <button className="node-menu-item" onClick={()=>{setMenuOpen(false);duplicateNode(node.id)}}>
@@ -168,12 +206,20 @@ function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string
         <button className={`palette-swatch palette-clear ${!node.tint?'is-active':''}`} title="Clear" aria-label="Clear color" onClick={()=>{setNodeTint(node.id,null); setPaletteOpen(false)}}>×</button>
       </div>
     </>}
+    {styleOpen&&<>
+      <div className="style-backdrop" onClick={e=>{e.stopPropagation(); setStyleOpen(false)}} aria-hidden="true" />
+      <div className="style-popover" onClick={e=>e.stopPropagation()} aria-label="Node style">
+        {NODE_STYLES.map(s=>(
+          <button key={s.id} className={`style-card ${(node.style===s.id||(node.style==null&&s.id==='classic'))?'is-active':''}`} onClick={()=>{setNodeStyle(node.id, s.id==='classic'?undefined:s.id); setStyleOpen(false)}}>
+            <span className={`style-preview style-${s.id}`} aria-hidden="true" />
+            <span className="style-label">{s.label}</span>
+          </button>
+        ))}
+      </div>
+    </>}
     {node.isCollapsed&&childIds.length>0&&<div className="node-meta"><span className="chip">{childIds.length} hidden</span>{(['failed','review','mastered'] as const).map(k=>summary[k]?<span key={k} className={`chip chip-${k}`}><b>{summary[k]}{STATUS_META[k].short}</b></span>:null)}</div>}
     <button type="button" className="resize-grip" aria-label="Resize node" title="Drag to resize · double-click to reset" onPointerDown={onGripDown} onPointerMove={onGripMove} onPointerUp={onGripUp} onDoubleClick={onGripDblClick}/>
   </div>;
 }
 
 export default memo(NodeInner);
-
-
-

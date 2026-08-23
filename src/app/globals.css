@@ -46,6 +46,10 @@
   --success: #059669;
   --success-soft: rgba(16, 185, 129, 0.18);
 
+  /* ---- Node style tokens ---- */
+  --sticky-bg: #fffdf5;
+  --sticky-border: #e8dcc4;
+
   /* ---- Semantic aliases (retained for component use) ---- */
   --red: #ef4444;
   --amber: #f59e0b;
@@ -59,6 +63,7 @@
   --beam-highlight: var(--on-accent);  /* border-beam highlight stop (review fix #5) */
 
   /* ---- Elevation tokens ---- */
+  --shadow-xs: 0 1px 1px rgba(15, 23, 42, 0.04), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.07), 0 4px 10px -4px rgba(15, 23, 42, 0.12);
   --shadow-md: 0 10px 24px -8px rgba(15, 23, 42, 0.18), 0 2px 6px rgba(15, 23, 42, 0.06);
   --shadow-lg: 0 16px 40px -8px rgba(15, 23, 42, 0.25);
@@ -131,6 +136,10 @@
   --success: #34d399;
   --success-soft: rgba(16, 185, 129, 0.18);
 
+  /* ---- Node style tokens ---- */
+  --sticky-bg: #2a2520;
+  --sticky-border: #4a4235;
+
   /* ---- Semantic aliases ---- */
   --red: #f87171;
   --amber: #f59e0b;
@@ -144,6 +153,7 @@
   --beam-highlight: var(--on-accent);  /* border-beam highlight stop (review fix #5) */
 
   /* ---- Elevation tokens ---- */
+  --shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.35);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 10px -4px rgba(0, 0, 0, 0.45);
   --shadow-md: 0 10px 24px -8px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 16px 40px -8px rgba(0, 0, 0, 0.6);
@@ -316,21 +326,96 @@ body.is-dragging * {
   height: 0;
 }
 
-/* ---- Node card ---- */
+/* ---- Node card ----
+   Structural surface uses CSS custom properties so role (hierarchy) and
+   style (user choice) can compose independently. Role sets size/elevation;
+   style sets surface/accent. */
 .node-card {
   position: absolute;
-  width: var(--node-width);
-  min-height: var(--node-min-h);
+  width: var(--nc-width, var(--node-width));
+  min-height: var(--nc-min-h, var(--node-min-h));
   height: auto;
-  background-color: var(--surface);
-  border: var(--space-separator) solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  background: var(--nc-bg, var(--surface));
+  border: var(--nc-border-w, var(--space-separator)) solid var(--nc-border-c, var(--line));
+  border-radius: var(--nc-radius, var(--radius));
+  box-shadow: var(--nc-shadow, var(--shadow-sm));
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   transition: box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+/* -- Role: Main / root node -----------------------------------------------
+   Larger, stronger shadow, wider radius, accent-tinted border weight. */
+.role-main {
+  --nc-width: 320px;
+  --nc-min-h: 80px;
+  --nc-shadow: var(--shadow-md);
+  --nc-border-w: 1.5px;
+  --nc-radius: 14px;
+}
+
+/* -- Role: Child node (depth 1) --------------------------------------------
+   Base defaults — no overrides needed; declared for explicitness. */
+
+/* -- Role: Descendant node (depth 2+) -------------------------------------
+   Narrower, lower elevation, subtler border. */
+.role-descendant {
+  --nc-width: 270px;
+  --nc-min-h: 56px;
+  --nc-shadow: var(--shadow-xs);
+  --nc-border-c: var(--line-2);
+}
+
+/* -- Style: Classic --------------------------------------------------------
+   Clean default card. */
+.style-classic {
+  --nc-bg: var(--surface);
+  --nc-border-c: var(--line);
+}
+
+/* -- Style: Sticky ---------------------------------------------------------
+   Warm paper-like note with subtle physical-card shadow. */
+.style-sticky {
+  --nc-bg: var(--sticky-bg);
+  --nc-border-c: var(--sticky-border);
+  --nc-shadow: 0 6px 14px -6px rgba(15, 23, 42, 0.18), 0 10px 24px -10px rgba(15, 23, 42, 0.12);
+}
+
+/* -- Style: Paper ----------------------------------------------------------
+   Document / research-note appearance with left accent stripe. */
+.style-paper {
+  --nc-bg: var(--surface);
+  --nc-border-c: var(--line);
+  border-left: 4px solid var(--accent);
+}
+
+/* -- Style: Highlight ------------------------------------------------------
+   Accent-tinted important note. */
+.style-highlight {
+  --nc-bg: var(--accent-soft);
+  --nc-border-c: color-mix(in srgb, var(--accent) 30%, var(--line));
+}
+
+/* -- Style: Minimal --------------------------------------------------------
+   Restrained node with little visual framing. */
+.style-minimal {
+  --nc-bg: color-mix(in srgb, var(--surface) 60%, transparent);
+  --nc-border-c: transparent;
+  --nc-shadow: none;
+}
+
+/* -- Main-node accent bar (top edge) -------------------------------------- */
+.nc-accent-top {
+  position: absolute;
+  top: 0;
+  left: 14px;
+  right: 14px;
+  height: 3px;
+  background: var(--accent);
+  border-radius: 0 0 3px 3px;
+  pointer-events: none;
 }
 
 .node-card textarea {
@@ -368,40 +453,22 @@ body.is-dragging * {
   }
 }
 
-/* Border-beam (concurrent with nodeIn, stops after ~5 s) */
-@property --beam-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-
+/* Node entrance glow — a soft, non-rotating accent outline that fades out.
+   Replaces the old rotating conic-gradient beam (anti-slop: no decorative motion). */
 .node-card.node-enter::after {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 2px;
-  background: conic-gradient(from var(--beam-angle),
-      transparent 0%, transparent 65%,
-      var(--accent) 82%, var(--beam-highlight) 92%, transparent 100%);
-  -webkit-mask: linear-gradient(var(--beam-highlight) 0 0) content-box, linear-gradient(var(--beam-highlight) 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(var(--beam-highlight) 0 0) content-box, linear-gradient(var(--beam-highlight) 0 0);
-  mask-composite: exclude;
+  inset: -2px;
+  border-radius: calc(var(--nc-radius, var(--radius)) + 2px);
+  border: 2px solid var(--accent);
+  opacity: 0;
   pointer-events: none;
-  animation: beam-rotate 1.5s linear infinite, beam-life 5s ease-in forwards;
+  animation: nodeGlow 0.6s ease-out forwards;
 }
 
-@keyframes beam-rotate {
-  to {
-    --beam-angle: 360deg;
-  }
-}
-
-@keyframes beam-life {
-  0%,
-  85% {
-    opacity: 1;
+@keyframes nodeGlow {
+  0% {
+    opacity: 0.5;
   }
   100% {
     opacity: 0;
@@ -459,11 +526,11 @@ body.is-dragging * {
 /* ---- Marker / status dot (original Synapse marking system) ---- */
 .status-dot {
   flex: 0 0 auto;
-  width: 14px;
-  height: 14px;
-  margin-top: 4px;
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
   border-radius: 50%;
-  border: var(--space-separator) solid var(--line-2);
+  border: 1.5px solid var(--line-2);
   background: transparent;
   padding: 0;
   cursor: pointer;
@@ -586,6 +653,38 @@ body.is-dragging * {
 .node-content.is-empty {
   color: var(--faint);
   font-weight: 400;
+}
+
+/* ---- Node content hierarchy (presentational) ----
+   First line renders as a stronger title; remaining lines as body.
+   No data-model change — purely visual. */
+.node-title-line {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.node-body-line {
+  display: block;
+  font-size: var(--text-node);
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+.role-main .node-title-line {
+  font-size: 15.5px;
+}
+
+.role-descendant .node-title-line {
+  font-size: 13.5px;
+}
+
+.role-descendant .node-body-line {
+  font-size: 13px;
 }
 
 .node-editor-wrap {
@@ -767,6 +866,95 @@ body.is-dragging * {
   z-index: 999;
 }
 
+/* ---- Node style popover ---- */
+.style-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+}
+
+.style-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 1000;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  min-width: 210px;
+  padding: 8px;
+  background: var(--panel-bg);
+  border: var(--space-separator) solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg), 0 0 0 1px var(--line-2);
+  animation: menuIn 0.12s var(--ease-out);
+}
+
+.style-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 4px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.1s ease, border-color 0.1s ease;
+}
+
+.style-card:hover {
+  background: var(--hover);
+}
+
+.style-card.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.style-preview {
+  display: block;
+  width: 44px;
+  height: 28px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  position: relative;
+}
+
+/* Preview swatches mirror the actual node styles */
+.style-preview.style-sticky {
+  background: var(--sticky-bg);
+  border-color: var(--sticky-border);
+  box-shadow: 0 3px 6px -3px rgba(0, 0, 0, 0.25);
+}
+
+.style-preview.style-paper {
+  border-left: 3px solid var(--accent);
+}
+
+.style-preview.style-highlight {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+}
+
+.style-preview.style-minimal {
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  border-style: dashed;
+}
+
+.style-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink-2);
+}
+
+.style-card.is-active .style-label {
+  color: var(--accent);
+}
+
 /* ---- Node + action buttons ---- */
 /* Side creation controls — absolutely positioned on card edges, vertically centred */
 .node-action-add {
@@ -876,14 +1064,8 @@ body.is-dragging * {
   inset: -3px;
   border-radius: inherit;
   border: 2px solid var(--accent);
-  opacity: 0.4;
+  opacity: 0.5;
   pointer-events: none;
-  animation: magnetPulse 1.2s ease-in-out infinite;
-}
-
-@keyframes magnetPulse {
-  0%, 100% { opacity: 0.25; }
-  50% { opacity: 0.55; }
 }
 
 /* ---- Node colour swatches ---- */
@@ -1988,9 +2170,11 @@ body.is-dragging * {
   margin-top: -2px;
 }
 
-/* ---- Node colour palette (E2 — no blur) ---- */
+/* ---- Node colour tint ----
+   Tints the node surface. Uses --nc-bg so it composes with the custom-property
+   background system; overrides style background when present. */
 .node-card.is-tinted {
-  background-color: color-mix(in srgb, var(--tint) 14%, var(--surface));
+  --nc-bg: color-mix(in srgb, var(--tint) 14%, var(--surface));
 }
 
 .icon-btn.palette.is-active {
@@ -2545,10 +2729,12 @@ body.is-dragging * {
   border-radius: var(--radius-xs);
 }
 
-/* ---- Selection hint ---- */
+/* ---- Selection ----
+   Selected node gets an accent outline plus a tactile lift via shadow. */
 .node-card.is-selected {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+  box-shadow: var(--shadow-md);
 }
 
 .selection-hint {
@@ -2851,8 +3037,22 @@ body.is-dragging * {
   }
 }
 
-/* ---- Responsive breakpoints ---- */
-@media (max-width: 760px) {
+/* ---- Responsive breakpoints ----
+   Layout-driven breakpoints:
+     >1024px  desktop (default)
+     768–1024px tablet: compact toolbar, collapsible sidebar
+     640–768px smaller tablet: sidebar becomes overlay drawer
+     <640px  phone: stacked layout, bottom actions
+*/
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 220px;
+    flex: 0 0 220px;
+  }
+}
+
+@media (max-width: 768px) {
   .dial-card {
     display: none;
   }
@@ -2866,8 +3066,20 @@ body.is-dragging * {
   }
 
   .sidebar {
-    width: 220px;
-    flex: 0 0 220px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 25;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebar-collapsed {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 25;
   }
 }
 

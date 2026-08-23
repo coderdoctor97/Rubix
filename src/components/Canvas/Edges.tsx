@@ -3,7 +3,7 @@ import {useMemo, useState, useCallback} from 'react';
 import AnimatedBeam from './AnimatedBeam';
 import {useCanvasStore} from '@/lib/store';
 import {NODE_MIN_HEIGHT, NODE_WIDTH, CONNECTION_MAGNET_THRESHOLD} from '@/lib/types';
-import {visibleOrder} from '@/lib/operations/hierarchy';
+import {visibleOrder, getAncestorIds} from '@/lib/operations/hierarchy';
 
 const STATUS_COLOR: Record<string, string> = {
   mastered: 'var(--green)',
@@ -62,7 +62,7 @@ export default function Edges() {
     }
   }, [isSelectedFor, setSelectedConnection]);
 
-  const paths = useMemo(() => {
+    const paths = useMemo(() => {
     if (!nodes) return [];
     const visible = new Set(visibleOrder({ nodes, viewport: { x: 0, y: 0, zoom: 1 } } as any));
     const out: {
@@ -74,6 +74,7 @@ export default function Edges() {
       isNew: boolean;
       isMarked: boolean;
       isManual: boolean;
+      level: number;
     }[] = [];
 
     // Parent → child edges (directional, edge-attached) — hidden when child is collapsed
@@ -86,6 +87,7 @@ export default function Edges() {
       const pEnd = edgeCenter(parent, child);
       const cEnd = edgeCenter(child, parent);
       const stroke = edgeColor(child);
+      const level = getAncestorIds({ nodes } as any, child.id).length;
 
       out.push({
         key: `edge-${child.parentId}-${child.id}`,
@@ -96,6 +98,7 @@ export default function Edges() {
         isNew: child.id === justCreatedId,
         isMarked: child.id === lastMarkedId || child.parentId === lastMarkedId,
         isManual: false,
+        level,
       });
     }
 
@@ -120,6 +123,7 @@ export default function Edges() {
           isNew: false,
           isMarked: false,
           isManual: true,
+          level: 0,
         });
       }
     }
@@ -189,7 +193,7 @@ export default function Edges() {
                 onMouseLeave={() => setHoveredKey(null)}
                 onClick={() => handleConnectionClick(p.a, p.b)}
               />
-              {/* Visible wire */}
+              {/* Visible wire — depth-aware: primary (level 1) stronger, deeper levels lighter */}
               <path
                 d={p.d}
                 fill="none"
@@ -197,8 +201,8 @@ export default function Edges() {
                 strokeDasharray="none"
                 style={{
                   stroke: p.stroke,
-                  strokeWidth: isSelected ? 3 : isHovered ? 2.5 : p.isManual ? 2 : 2,
-                  opacity: isSelected ? 1 : isHovered ? 0.9 : p.isManual ? 0.65 : 0.7,
+                  strokeWidth: isSelected ? 3 : isHovered ? 2.5 : p.isManual ? 2 : p.level <= 1 ? 2.5 : 1.5,
+                  opacity: isSelected ? 1 : isHovered ? 0.9 : p.isManual ? 0.65 : p.level <= 1 ? 0.85 : 0.5,
                   transition: 'stroke-width 0.18s ease, opacity 0.18s ease',
                   pointerEvents: 'none',
                 }}

@@ -1,7 +1,8 @@
 export type Status = 'none' | 'failed' | 'review' | 'mastered';
 export type Position = { x:number; y:number };
 export type NodeSize = { width:number; height:number };
-export type Node = { id:string; content:string; parentId:string|null; position:Position; status:Status; isCollapsed:boolean; tint?: string | null; size?: NodeSize | null; createdAt:number; updatedAt:number };
+export type NodeStyle = 'classic' | 'sticky' | 'paper' | 'highlight' | 'minimal';
+export type Node = { id:string; content:string; parentId:string|null; position:Position; status:Status; isCollapsed:boolean; tint?: string | null; style?: NodeStyle; size?: NodeSize | null; createdAt:number; updatedAt:number };
 export type AnnotationKind = 'text' | 'heading';
 export type Annotation = { id:string; kind:AnnotationKind; content:string; position:Position; createdAt:number; updatedAt:number };
 export type Connection = { a: string; b: string };
