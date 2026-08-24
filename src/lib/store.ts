@@ -24,6 +24,7 @@ type State={
   past:Snapshot[];
   future:Snapshot[];
   focusMode:boolean;
+  presentationMode:boolean;
   revealIds:string[];
   hoverId:string|null;
   connectingFrom:string|null;
@@ -86,6 +87,7 @@ type State={
   redo:()=>void;
   clearHistory:()=>void;
   setFocusMode:(v:boolean)=>void;
+  setPresentationMode:(v:boolean)=>void;
   setRevealIds:(ids:string[])=>void;
   setHoverId:(id:string|null)=>void;
   toggleNode:(id:string)=>void;
@@ -117,8 +119,9 @@ export const useCanvasStore=create<State>((set,get)=>({
   canvas:null,editingId:null,justCreatedId:null,lastMarkedId:null,saved:false,
   heatmapMode:initialSettings.heatmapMode,theme:initialSettings.theme,customThemes:initialCustomThemes,
   index:null,sidebarOpen:true,helpOpen:false,selectedNodeIds:[],past:[],future:[],
-  focusMode:false,revealIds:[],hoverId:null,connectingFrom:null,mouseWorld:null,magneticTarget:null,selectedConnection:null,
+  focusMode:false,presentationMode:false,revealIds:[],hoverId:null,connectingFrom:null,mouseWorld:null,magneticTarget:null,selectedConnection:null,
   setFocusMode:(focusMode)=>set({focusMode}),
+  setPresentationMode:(presentationMode)=>set({presentationMode}),
   setRevealIds:(revealIds)=>set({revealIds}),
   setHoverId:(hoverId)=>set({hoverId}),
   setConnectingFrom:(connectingFrom)=>set({connectingFrom,magneticTarget:connectingFrom?get().magneticTarget:null}),

@@ -1,14 +1,17 @@
 'use client';
 import Button from '../ui/Button';
 import { useCanvasStore } from '@/lib/store';
-import { MagicWandIcon, CaretDown, CaretUp, ArrowUUpLeft, ArrowURightDown, Plus, Sparkle } from '@phosphor-icons/react';
+import { MagicWandIcon, CaretDown, CaretUp, ArrowUUpLeft, ArrowURightDown, Plus, Sparkle, PresentationChart } from '@phosphor-icons/react';
 
 export default function Toolbar({ onAdd, onAddText, onAddHeading, onCollapse, onExpand }: { onAdd: () => void; onAddText: () => void; onAddHeading: () => void; onCollapse: () => void; onExpand: () => void }) {
   const canvas = useCanvasStore(s => s.canvas);
   const past = useCanvasStore(s => s.past), future = useCanvasStore(s => s.future), undo = useCanvasStore(s => s.undo), redo = useCanvasStore(s => s.redo);
   const applyTidy = useCanvasStore(s => s.applyTidy);
+  const presentationMode = useCanvasStore(s => s.presentationMode);
+  const setPresentationMode = useCanvasStore(s => s.setPresentationMode);
   const canUndo = past.length > 0, canRedo = future.length > 0;
   const hasNodes = !!canvas && Object.keys(canvas.nodes).length > 0;
+  const presentationCount = canvas ? Object.values(canvas.nodes).filter(n => typeof n.presentationOrder === 'number').length : 0;
 
   // Derived collapse/expand state (UI-only — store actions untouched)
   const nodes = canvas?.nodes;
@@ -49,6 +52,17 @@ export default function Toolbar({ onAdd, onAddText, onAddHeading, onCollapse, on
         aria-label="Tidy layout"
       >
         <MagicWandIcon size={16} aria-hidden="true" />
+      </Button>
+      <div className="tb-sep" />
+      <Button
+        className={`tb-icon-btn ${presentationMode ? 'is-active' : ''}`}
+        onClick={e => { e.stopPropagation(); setPresentationMode(!presentationMode); }}
+        title={presentationMode ? 'Exit presentation mode' : 'Enter presentation mode'}
+        aria-label={presentationMode ? 'Exit presentation mode' : 'Enter presentation mode'}
+        aria-pressed={presentationMode}
+      >
+        <PresentationChart size={16} weight={presentationMode ? 'fill' : 'regular'} aria-hidden="true" />
+        {presentationCount > 0 && !presentationMode && <span className="tb-presentation-count">{presentationCount}</span>}
       </Button>
       <div className="tb-sep" />
       <Button disabled={!canUndo} onClick={e => { e.stopPropagation(); undo(); }} aria-label="Undo (Ctrl+Z)" title="Undo (Ctrl+Z)" className={`tb-icon-btn${canUndo ? '' : ' is-disabled'}`}>

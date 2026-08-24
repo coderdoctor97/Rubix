@@ -183,12 +183,14 @@ function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string
     isDraggingNode.current=false;
   };
 
+  const presentationMode = useCanvasStore(s=>s.presentationMode);
   const isPresentation = typeof node.presentationOrder === 'number' && Number.isFinite(node.presentationOrder);
+  const showPresentationBadge = isPresentation && presentationMode;
 
   return (
     <div
       ref={cardRef}
-      className={`node-card ${roleClass} ${styleClass} ${editing===node.id?'is-editing':''} ${just===node.id?'node-enter':''} ${node.tint?'is-tinted':''} ${isSelected?'is-selected':''} ${size?'is-sized':''} ${isRevealing?'node-reveal':''} ${magneticTarget===node.id?'node-magnet-target':''} ${isPresentation?'is-presentation':''}`}
+      className={`node-card ${roleClass} ${styleClass} ${editing===node.id?'is-editing':''} ${just===node.id?'node-enter':''} ${node.tint?'is-tinted':''} ${isSelected?'is-selected':''} ${size?'is-sized':''} ${isRevealing?'node-reveal':''} ${magneticTarget===node.id?'node-magnet-target':''} ${isPresentation?'is-presentation':''} ${showPresentationBadge?'has-presentation-badge':''}`}
       style={cardStyle}
       onPointerDownCapture={e=>{if(e.button===0&&!isSelected)selectForInteraction(node.id)}}
       onPointerEnter={e=>{if(window.matchMedia('(hover: hover)').matches)setHoverId(node.id)}}
@@ -198,7 +200,7 @@ function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string
       onPointerUp={onNodeDragEnd}
     >
       <span className="node-grain" aria-hidden="true"></span>
-      {isPresentation && (
+      {showPresentationBadge && (
         <div className="presentation-badge" aria-label={`Presentation step ${node.presentationOrder}`} title={`Presentation step ${node.presentationOrder}`}>
           {formatPresentationOrder(node.presentationOrder!)}
         </div>
