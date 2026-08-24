@@ -16,6 +16,7 @@ type State={
   saved:boolean;
   heatmapMode:HeatmapMode;
   theme:ThemeId;
+  specialMode:boolean;
   customThemes:Record<ThemeId,CustomTheme>;
   index:CanvasIndex|null;
   sidebarOpen:boolean;
@@ -60,6 +61,7 @@ type State={
   flashSaved:()=>void;
   setHeatmapMode:(mode:HeatmapMode)=>void;
   setTheme:(themeId:ThemeId)=>void;
+  setSpecialMode:(v:boolean)=>void;
   createCustomTheme:(name:string,base:'light'|'dark',colors:Record<string,string>)=>ThemeId;
   updateCustomTheme:(id:ThemeId,updates:Partial<Pick<CustomTheme,'name'|'base'|'colors'>>)=>void;
   deleteCustomTheme:(id:ThemeId)=>void;
@@ -97,7 +99,7 @@ type State={
   applyTidy:()=>void
 };
 
-const initialSettings=typeof window==='undefined'?{heatmapMode:'mini' as HeatmapMode,theme:'light' as ThemeId}:loadUISettings();
+const initialSettings=typeof window==='undefined'?{heatmapMode:'mini' as HeatmapMode,theme:'light' as ThemeId,specialMode:false}:loadUISettings();
 const initialCustomThemes=typeof window==='undefined'?{} as Record<ThemeId,CustomTheme>:loadCustomThemes();
 let timer:ReturnType<typeof setTimeout>|undefined,flash:ReturnType<typeof setTimeout>|undefined;
 const MAX_HISTORY = 50;
@@ -118,7 +120,7 @@ function normalizePresentationOrderInPlace(nodes: Record<string, Node>) {
 
 export const useCanvasStore=create<State>((set,get)=>({
   canvas:null,editingId:null,justCreatedId:null,lastMarkedId:null,saved:false,
-  heatmapMode:initialSettings.heatmapMode,theme:initialSettings.theme,customThemes:initialCustomThemes,
+  heatmapMode:initialSettings.heatmapMode,theme:initialSettings.theme,specialMode:initialSettings.specialMode,customThemes:initialCustomThemes,
   index:null,sidebarOpen:true,helpOpen:false,selectedNodeIds:[],past:[],future:[],
   focusMode:false,presentationMode:false,revealIds:[],hoverId:null,connectingFrom:null,mouseWorld:null,magneticTarget:null,selectedConnection:null,
   setFocusMode:(focusMode)=>set({focusMode}),
@@ -129,8 +131,9 @@ export const useCanvasStore=create<State>((set,get)=>({
   setMouseWorld:(mouseWorld)=>set({mouseWorld}),
   setMagneticTarget:(magneticTarget)=>set({magneticTarget}),
   setSelectedConnection:(selectedConnection)=>set({selectedConnection}),
-  setHeatmapMode:(mode)=>{set({heatmapMode:mode});saveUISettings({heatmapMode:mode,theme:get().theme})},
-  setTheme:(themeId)=>{set({theme:themeId});saveUISettings({heatmapMode:get().heatmapMode,theme:themeId});applyTheme(themeId,get().customThemes)},
+  setHeatmapMode:(mode)=>{set({heatmapMode:mode});saveUISettings({heatmapMode:mode,theme:get().theme,specialMode:get().specialMode})},
+  setTheme:(themeId)=>{set({theme:themeId});saveUISettings({heatmapMode:get().heatmapMode,theme:themeId,specialMode:get().specialMode});applyTheme(themeId,get().customThemes)},
+  setSpecialMode:(v)=>{set({specialMode:v});saveUISettings({heatmapMode:get().heatmapMode,theme:get().theme,specialMode:v})},
   createCustomTheme:(name,base,colors)=>{const now=Date.now(),id=`custom-${now}-${Math.random().toString(36).slice(2,8)}`,theme:CustomTheme={id,name,base,colors,createdAt:now,updatedAt:now},customThemes={...get().customThemes,[id]:theme};set({customThemes});saveCustomThemes(customThemes);return id},
   updateCustomTheme:(id,updates)=>{const existing=get().customThemes[id];if(!existing)return;const customThemes={...get().customThemes,[id]:{...existing,...updates,updatedAt:Date.now()}};set({customThemes});saveCustomThemes(customThemes);if(get().theme===id)applyTheme(id,customThemes)},
   deleteCustomTheme:(id)=>{if(!get().customThemes[id])return;const customThemes={...get().customThemes};delete customThemes[id];set({customThemes});saveCustomThemes(customThemes);if(get().theme===id)get().setTheme('light')},

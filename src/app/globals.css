@@ -420,6 +420,59 @@ body.is-dragging * {
   opacity: 0.04;
 }
 
+/* ---- Special mode — night kinetic grid background ----
+   Replaces the dotted canvas pattern with an interactive, cursor-warped
+   grid. Sits above the board's base colour and below #world (nodes/edges). */
+.kinetic-grid {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.kinetic-grid-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.kinetic-grid-content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+
+/* When special mode is on, the board goes night — drop the dotted grid + paper
+   grain so the kinetic grid is the only surface texture. */
+#viewport.special-mode #grid,
+#viewport.special-mode #paper {
+  display: none;
+}
+
+#viewport.special-mode {
+  background-color: #0a0a0e;
+}
+
+/* Special mode is dark-only — the light/dark theme toggle is locked (greyed). */
+.toggle-switch.is-locked {
+  opacity: 0.45;
+  filter: saturate(0.35);
+}
+
+.toggle-switch.is-locked .switch-label {
+  cursor: not-allowed;
+}
+
+.toggle-switch.is-locked .checkbox {
+  cursor: not-allowed;
+}
+
 /* ---- World / edges / nodes (infinite canvas layers) ---- */
 #world {
   position: absolute;
