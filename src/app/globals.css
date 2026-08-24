@@ -762,24 +762,84 @@ body.is-dragging * {
   }
 }
 
-/* ---- Node internals — layout fix: content must not overlap meta ---- */
+/* ---- Node internals — CONTENT FIRST layout architecture ----
+   Root cause: status dot + chevron were flex items inside content flow,
+   stealing horizontal width and pushing text inward. Header controls
+   behaved as reserved columns instead of overlays.
+   Fix: content layer gets max space, chrome layer overlays around it.
+   - .node-main reserves small left/right padding but dot/chevron are absolute
+   - .node-content flexes full width
+   - Collapsed state becomes genuinely compact single row
+*/
 .node-top {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 6px;
+  gap: 0;
   flex: 1 1 auto;
   min-height: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .node-main {
+  position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 5px;
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
+  /* Reserve minimal space for overlay chrome, not large columns */
+  padding-left: 36px; /* 18px dot + 4px gap + 20px chevron */
+  padding-right: 32px; /* 28px more-btn + 4px */
   padding-top: 2px;
+}
+
+.node-main > .status-dot,
+.node-main > .chevron {
+  position: absolute;
+  top: 3px;
+}
+
+.node-main > .status-dot { left: 0; }
+.node-main > .chevron { left: 20px; }
+
+/* Collapsed: genuinely compact single row */
+.node-card.is-collapsed {
+  --nc-min-h: 44px;
+}
+
+.node-card.is-collapsed .node-top {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.node-card.is-collapsed .node-main {
+  align-items: center;
+  min-height: 28px;
+  padding-top: 0;
+}
+
+.node-card.is-collapsed .node-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.node-card.is-collapsed .node-body-line,
+.node-card.is-collapsed .node-rt p:not(:first-child),
+.node-card.is-collapsed .node-rt ul,
+.node-card.is-collapsed .node-rt ol,
+.node-card.is-collapsed .node-rt h1,
+.node-card.is-collapsed .node-rt h2,
+.node-card.is-collapsed .node-rt h3 {
+  display: none;
+}
+
+.node-card.is-collapsed .node-meta {
+  margin-top: 6px;
 }
 
 /* ---- Marker / status dot (original Synapse marking system) ----
@@ -790,7 +850,7 @@ body.is-dragging * {
   flex: 0 0 auto;
   width: 18px;
   height: 18px;
-  margin-top: 2px;
+  margin-top: 0;
   border-radius: 50%;
   border: 2px solid var(--line-2);
   background: var(--surface);
@@ -798,6 +858,7 @@ body.is-dragging * {
   cursor: pointer;
   box-shadow: 0 0 0 1px var(--surface);
   transition: transform 0.14s var(--ease-out), background 0.15s var(--ease-out), border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
+  z-index: 2;
 }
 
 .status-dot:hover {
@@ -1289,15 +1350,14 @@ body.is-dragging * {
 }
 
 .chevron {
-  flex: 0 0 auto;
   width: 20px;
   height: 20px;
-  margin-top: 1px;
   display: grid;
   place-items: center;
   border-radius: var(--radius-xs);
   color: var(--muted);
   transition: background 0.12s var(--ease-out), color 0.12s var(--ease-out);
+  z-index: 2;
 }
 
 .chevron:hover {
@@ -1471,7 +1531,7 @@ body.is-dragging * {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  min-width: 180px;
+  min-width: 220px; /* increased to accommodate single-line Remove from presentation */
   background: var(--panel-bg);
   border: var(--space-separator) solid var(--line);
   border-radius: var(--radius-sm);
@@ -1526,6 +1586,23 @@ body.is-dragging * {
   color: var(--muted);
   font-weight: 600;
   line-height: 1;
+}
+
+/* Presentation sequence metadata in menu — small, muted, tabular, right-aligned */
+.node-menu-meta {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--chip-bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  padding: 2px 7px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  flex: 0 0 auto;
 }
 
 .node-menu-back {

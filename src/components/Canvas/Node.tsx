@@ -7,7 +7,7 @@ import {formatPresentationOrder} from '@/lib/operations/presentation';
 import {parseFormatting} from '@/lib/operations/formatting';
 import StatusBadge from '../ui/StatusBadge';
 import {useCanvasStore} from '@/lib/store';
-import {Plus, DotsThree, CaretRight, PresentationChart} from '@phosphor-icons/react';
+import {Plus, DotsThree, CaretRight} from '@phosphor-icons/react';
 import {isRoot, getAncestorIds} from '@/lib/operations/hierarchy';
 import {docToHTML, planRichCommit} from '@/lib/operations/richtext';
 import RichEditor from './RichEditor';
@@ -190,7 +190,7 @@ function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string
   return (
     <div
       ref={cardRef}
-      className={`node-card ${roleClass} ${styleClass} ${editing===node.id?'is-editing':''} ${just===node.id?'node-enter':''} ${node.tint?'is-tinted':''} ${isSelected?'is-selected':''} ${size?'is-sized':''} ${isRevealing?'node-reveal':''} ${magneticTarget===node.id?'node-magnet-target':''} ${isPresentation?'is-presentation':''} ${showPresentationBadge?'has-presentation-badge':''}`}
+      className={`node-card ${roleClass} ${styleClass} ${editing===node.id?'is-editing':''} ${just===node.id?'node-enter':''} ${node.tint?'is-tinted':''} ${isSelected?'is-selected':''} ${size?'is-sized':''} ${isRevealing?'node-reveal':''} ${magneticTarget===node.id?'node-magnet-target':''} ${isPresentation?'is-presentation':''} ${showPresentationBadge?'has-presentation-badge':''} ${node.isCollapsed?'is-collapsed':''}`}
       style={cardStyle}
       onPointerDownCapture={e=>{if(e.button===0&&!isSelected)selectForInteraction(node.id)}}
       onPointerEnter={e=>{if(window.matchMedia('(hover: hover)').matches)setHoverId(node.id)}}
@@ -223,14 +223,12 @@ function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string
             <div className="node-menu-sep" />
             {!isPresentation ? (
               <button className="node-menu-item" onClick={()=>{setMenuOpen(false);addToPresentation(node.id)}}>
-                <span className="node-menu-icon" aria-hidden="true"><PresentationChart size={14} weight="regular" /></span>
                 <span className="node-menu-label">Add to presentation</span>
               </button>
             ) : (
               <button className="node-menu-item" onClick={()=>{setMenuOpen(false);removeFromPresentation(node.id)}}>
-                <span className="node-menu-icon" aria-hidden="true"><PresentationChart size={14} weight="regular" /></span>
                 <span className="node-menu-label">Remove from presentation</span>
-                <span className="node-menu-arrow">{formatPresentationOrder(node.presentationOrder!)}</span>
+                <span className="node-menu-meta">{formatPresentationOrder(node.presentationOrder!)}</span>
               </button>
             )}
             <div className="node-menu-sep" />
