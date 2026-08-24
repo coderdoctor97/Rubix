@@ -420,6 +420,127 @@ body.is-dragging * {
   opacity: 0.04;
 }
 
+/* ---- Special mode — night kinetic grid background ----
+   Replaces the dotted canvas pattern with an interactive, cursor-warped
+   grid. Sits above the board's base colour and below #world (nodes/edges). */
+.kinetic-grid {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.kinetic-grid-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.kinetic-grid-content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+
+/* When special mode is on, the board goes night — drop the dotted grid + paper
+   grain so the kinetic grid is the only surface texture. */
+#viewport.special-mode #grid,
+#viewport.special-mode #paper {
+  display: none;
+}
+
+#viewport.special-mode {
+  background-color: #0a0a0e;
+}
+
+/* Special mode is dark-only — the light/dark theme toggle is locked (greyed). */
+.toggle-switch.is-locked {
+  opacity: 0.45;
+  filter: saturate(0.35);
+}
+
+.toggle-switch.is-locked .switch-label {
+  cursor: not-allowed;
+}
+
+.toggle-switch.is-locked .checkbox {
+  cursor: not-allowed;
+}
+
+/* ---- Special mode: subtle neon glow on orange chrome (NOT the canvas) ----
+   Scoped to #viewport.special-mode, so it applies ONLY in Special mode and never
+   in the regular dark theme. Gives the orange-accented chrome a soft neon halo:
+   the topbar/toolbar cluster, the view & zoom bar, the sidebar brand + footer
+   create buttons, the floating accent buttons, and the active accent icons.
+   Nothing inside #viewport (the kinetic grid canvas) is touched. */
+.canvas-layout:has(#viewport.special-mode) {
+  --neon: 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent),
+          0 0 3px color-mix(in srgb, var(--accent) 45%, transparent),
+          0 0 14px color-mix(in srgb, var(--accent) 38%, transparent),
+          0 0 28px color-mix(in srgb, var(--accent) 22%, transparent);
+  --neon-text: 0 0 6px color-mix(in srgb, var(--accent) 70%, transparent),
+               0 0 12px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+/* Topbar / toolbar cluster + view & zoom bar — soft edge glow. */
+.canvas-layout:has(#viewport.special-mode) .tb-cluster {
+  box-shadow: var(--neon), var(--shadow-md), inset 0 1px 0 var(--surface-sheen);
+}
+.canvas-layout:has(#viewport.special-mode) #viewbar {
+  box-shadow: var(--neon), var(--shadow-md);
+}
+
+/* Solid orange surfaces — brand logo, primary buttons, floating help button,
+   sidebar brand mark, collapsed rail brand, footer create button. */
+.canvas-layout:has(#viewport.special-mode) .brand-logo {
+  box-shadow: var(--neon), 0 4px 12px -2px var(--accent-shadow), inset 0 1px 0 var(--surface-sheen);
+}
+.canvas-layout:has(#viewport.special-mode) .btn-primary {
+  box-shadow: var(--neon), 0 2px 8px -2px var(--accent-shadow);
+}
+.canvas-layout:has(#viewport.special-mode) .faq-button {
+  box-shadow: var(--neon), var(--shadow-md), inset 0 1px 0 var(--surface-sheen);
+}
+.canvas-layout:has(#viewport.special-mode) .sidebar-brand-mark {
+  box-shadow: var(--neon), inset 0 1px 0 var(--surface-sheen);
+}
+.canvas-layout:has(#viewport.special-mode) .rail-brand {
+  box-shadow: var(--neon), inset 0 1px 0 var(--surface-sheen);
+}
+.canvas-layout:has(#viewport.special-mode) .sidebar-footer-create {
+  box-shadow: var(--neon), 0 2px 8px -3px var(--accent-shadow);
+}
+
+/* Orange-tinted active rows — accent rail + soft halo. */
+.canvas-layout:has(#viewport.special-mode) .sidebar-page.is-active {
+  box-shadow: var(--neon), inset 3px 0 0 var(--accent);
+}
+.canvas-layout:has(#viewport.special-mode) .rail-mark.is-active {
+  box-shadow: var(--neon), inset 3px 0 0 var(--accent);
+}
+.canvas-layout:has(#viewport.special-mode) .sidebar-icon-btn.pinned {
+  text-shadow: var(--neon-text);
+}
+
+/* Accent-coloured icons / active icon buttons — neon text halo. */
+.canvas-layout:has(#viewport.special-mode) .zb-btn.is-active,
+.canvas-layout:has(#viewport.special-mode) .tb-icon-btn.is-active,
+.canvas-layout:has(#viewport.special-mode) .special-mode-btn.is-active,
+.canvas-layout:has(#viewport.special-mode) .theme-manager-trigger.is-active {
+  text-shadow: var(--neon-text);
+}
+
+/* Theme switch knob when toggled dark in Special mode — soft halo. */
+.canvas-layout:has(#viewport.special-mode) .toggle-switch .checkbox:checked~.slider::before {
+  box-shadow: var(--neon);
+}
+
 /* ---- World / edges / nodes (infinite canvas layers) ---- */
 #world {
   position: absolute;
@@ -3349,6 +3470,7 @@ body.is-dragging * {
 /* Surface is deliberately quieter than the canvas board, so the layering reads
    Sidebar (navigation) → Canvas (workspace) → Nodes (knowledge). */
 .sidebar {
+  position: relative;
   width: 264px;
   flex: 0 0 264px;
   background: var(--surface-nav);
@@ -3365,6 +3487,128 @@ body.is-dragging * {
   align-items: center;
   padding: 10px 0;
   gap: 4px;
+}
+
+/* ---- Midnight sky — library background (Special mode only) ----
+   A dim twinkling starfield + shooting stars rendered behind the Library
+   (sidebar) panel. Shown only when the library is open in Special mode,
+   scaled to the narrow sidebar proportions. Stars stay low-opacity so they
+   never fight the text. Pure CSS — no images, no JS animation loop. */
+.midnight-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(110% 70% at 50% -12%, rgba(58, 54, 74, 0.38) 0%, rgba(5, 5, 8, 0) 58%),
+    #050508;
+}
+
+.midnight-sky__stars {
+  position: absolute;
+  inset: -6%;
+  background-repeat: repeat;
+  animation: midnight-twinkle var(--tw, 3.5s) ease-in-out infinite;
+  will-change: opacity;
+}
+
+/* Small (dense, faint) — the base layer. */
+.midnight-sky__stars--sm {
+  --tw: 2.4s;
+  --max: 0.5;
+  background-image:
+    radial-gradient(circle at 18px 22px, rgba(255, 255, 255, 0.5) 1px, transparent 1.5px),
+    radial-gradient(circle at 92px 70px, rgba(255, 255, 255, 0.4) 1px, transparent 1.5px),
+    radial-gradient(circle at 168px 140px, rgba(255, 255, 255, 0.45) 1px, transparent 1.5px),
+    radial-gradient(circle at 36px 168px, rgba(255, 255, 255, 0.35) 1px, transparent 1.5px),
+    radial-gradient(circle at 214px 96px, rgba(255, 255, 255, 0.4) 1px, transparent 1.5px),
+    radial-gradient(circle at 128px 214px, rgba(255, 255, 255, 0.45) 1px, transparent 1.5px),
+    radial-gradient(circle at 250px 40px, rgba(255, 255, 255, 0.38) 1px, transparent 1.5px);
+  background-size: 260px 260px;
+}
+
+/* Medium — fewer, brighter. */
+.midnight-sky__stars--md {
+  --tw: 3.4s;
+  --max: 0.6;
+  background-image:
+    radial-gradient(circle at 44px 60px, rgba(255, 255, 255, 0.55) 1.2px, transparent 1.8px),
+    radial-gradient(circle at 190px 40px, rgba(255, 255, 255, 0.5) 1.2px, transparent 1.8px),
+    radial-gradient(circle at 120px 180px, rgba(255, 255, 255, 0.55) 1.2px, transparent 1.8px);
+  background-size: 300px 300px;
+}
+
+/* Large — sparse, brightest accents. */
+.midnight-sky__stars--lg {
+  --tw: 4.6s;
+  --max: 0.7;
+  background-image:
+    radial-gradient(circle at 80px 90px, rgba(255, 255, 255, 0.62) 1.6px, transparent 2.3px),
+    radial-gradient(circle at 220px 160px, rgba(255, 255, 255, 0.56) 1.6px, transparent 2.3px),
+    radial-gradient(circle at 140px 40px, rgba(255, 255, 255, 0.62) 1.6px, transparent 2.3px);
+  background-size: 320px 320px;
+}
+
+@keyframes midnight-twinkle {
+  0%, 100% { opacity: var(--max, 0.5); }
+  50% { opacity: calc(var(--max, 0.5) * 0.35); }
+}
+
+/* ---- Shooting stars (meteors) ----
+   Travel left → right across the Library panel, no fade-out, and gradually
+   shrink to a tiny point as they cross. Slight downward tilt for a natural
+   fall. Reaches full visibility on entry from the left edge and exits fully
+   off the right edge (the container clips them, so no pop-in / no fade). */
+.midnight-sky__meteor {
+  position: absolute;
+  width: 40px;
+  height: 0.7px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 224, 178, 0.5) 60%,
+    rgba(255, 236, 200, 0.85) 100%
+  );
+  filter: drop-shadow(0 0 2px rgba(255, 224, 178, 0.4));
+  opacity: 1;
+  transform: rotate(18deg) translateX(-30px) scale(1);
+  animation: midnight-meteor 9s linear infinite;
+  will-change: transform, opacity;
+}
+
+.midnight-sky__meteor::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 1.2px;
+  height: 1.2px;
+  transform: translate(50%, -50%);
+  border-radius: 50%;
+  background: rgba(255, 236, 200, 0.85);
+  box-shadow: 0 0 3px 1px rgba(255, 214, 150, 0.5);
+}
+
+.midnight-sky__meteor--1 { top: 10%; left: 4%;   animation-delay: -1s; }
+.midnight-sky__meteor--2 { top: 27%; left: 0%;   animation-delay: -3.4s; }
+.midnight-sky__meteor--3 { top: 44%; left: 6%;   animation-delay: -5.8s; }
+.midnight-sky__meteor--4 { top: 60%; left: 2%;   animation-delay: -2.2s; }
+.midnight-sky__meteor--5 { top: 74%; left: 8%;   animation-delay: -7.2s; }
+
+@keyframes midnight-meteor {
+  0%   { opacity: 1; transform: rotate(18deg) translateX(-30px) scale(1); }
+  100% { opacity: 1; transform: rotate(18deg) translateX(300px) scale(0.12); }
+}
+
+/* Raise the library panel's main sections above the midnight-sky layer so
+   the content (and its text) always sits in front of the starfield. */
+.sidebar > .sidebar-header,
+.sidebar > .sidebar-content,
+.sidebar > .sidebar-footer {
+  position: relative;
+  z-index: 1;
 }
 
 /* Drawer scrim — phone/tablet overlay only (display:none on desktop). */

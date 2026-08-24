@@ -9,7 +9,7 @@ import Annotation from './Annotation';
 import Edges from './Edges';
 import Toolbar from './Toolbar';
 import PresentationBar from './PresentationBar';
-import {MagnifyingGlass,MagicWand,Plus,Minus} from '@phosphor-icons/react';
+import {MagnifyingGlass,MagicWand,Plus,Minus,Sparkle} from '@phosphor-icons/react';
 import useStatusShortcuts from '@/hooks/useStatusShortcuts';
 import useHistoryShortcuts from '@/hooks/useHistoryShortcuts';
 import useHelpShortcut from '@/hooks/useHelpShortcut';
@@ -18,12 +18,14 @@ import KnowledgeDialPanel from './KnowledgeDialPanel';
 import HelpPanel from './HelpPanel';
 import ThemeToggle from './ThemeToggle';
 import ThemeManager from './ThemeManager';
+import KineticGrid from '@/components/ui/kinetic-grid';
 
 export default function Canvas({canvasId}:{canvasId:string}) {
-  const canvas=useCanvasStore(s=>s.canvas), init=useCanvasStore(s=>s.init), update=useCanvasStore(s=>s.update), createRoot=useCanvasStore(s=>s.createRoot), saved=useCanvasStore(s=>s.saved), clearSelection=useCanvasStore(s=>s.clearSelection), editingId=useCanvasStore(s=>s.editingId), recordHistory=useCanvasStore(s=>s.recordHistory), moveNodes=useCanvasStore(s=>s.moveNodes), moveNodesLive=useCanvasStore(s=>s.moveNodesLive), selectNodes=useCanvasStore(s=>s.selectNodes), createAnnotation=useCanvasStore(s=>s.createAnnotation), focusMode=useCanvasStore(s=>s.focusMode), setFocusMode=useCanvasStore(s=>s.setFocusMode), presentationMode=useCanvasStore(s=>s.presentationMode), selectedNodeIds=useCanvasStore(s=>s.selectedNodeIds), justCreatedId=useCanvasStore(s=>s.justCreatedId), connectingFrom=useCanvasStore(s=>s.connectingFrom), mouseWorld=useCanvasStore(s=>s.mouseWorld), magneticTarget=useCanvasStore(s=>s.magneticTarget), setMagneticTarget=useCanvasStore(s=>s.setMagneticTarget), setConnectingFrom=useCanvasStore(s=>s.setConnectingFrom), selectedConnection=useCanvasStore(s=>s.selectedConnection), setSelectedConnection=useCanvasStore(s=>s.setSelectedConnection);
+  const canvas=useCanvasStore(s=>s.canvas), init=useCanvasStore(s=>s.init), update=useCanvasStore(s=>s.update), createRoot=useCanvasStore(s=>s.createRoot), saved=useCanvasStore(s=>s.saved), clearSelection=useCanvasStore(s=>s.clearSelection), editingId=useCanvasStore(s=>s.editingId), recordHistory=useCanvasStore(s=>s.recordHistory), moveNodes=useCanvasStore(s=>s.moveNodes), moveNodesLive=useCanvasStore(s=>s.moveNodesLive), selectNodes=useCanvasStore(s=>s.selectNodes), createAnnotation=useCanvasStore(s=>s.createAnnotation), focusMode=useCanvasStore(s=>s.focusMode), setFocusMode=useCanvasStore(s=>s.setFocusMode), presentationMode=useCanvasStore(s=>s.presentationMode), selectedNodeIds=useCanvasStore(s=>s.selectedNodeIds), justCreatedId=useCanvasStore(s=>s.justCreatedId), connectingFrom=useCanvasStore(s=>s.connectingFrom), mouseWorld=useCanvasStore(s=>s.mouseWorld), magneticTarget=useCanvasStore(s=>s.magneticTarget), setMagneticTarget=useCanvasStore(s=>s.setMagneticTarget), setConnectingFrom=useCanvasStore(s=>s.setConnectingFrom), selectedConnection=useCanvasStore(s=>s.selectedConnection), setSelectedConnection=useCanvasStore(s=>s.setSelectedConnection), specialMode=useCanvasStore(s=>s.specialMode), setSpecialMode=useCanvasStore(s=>s.setSpecialMode), setTheme=useCanvasStore(s=>s.setTheme);
   const isMultiSelected=selectedNodeIds.length>1;
   const ref=useRef<HTMLDivElement>(null);
   const [themesOpen,setThemesOpen]=useState(false);
+  const [mounted,setMounted]=useState(false);
   const [dragState,setDragState]=useState<{id:string;sx:number;sy:number;orig:Record<string,Position>}|null>(null);
   const [panState,setPanState]=useState<{sx:number;sy:number;ox:number;oy:number}|null>(null);
   const [lassoState,setLassoState]=useState<{sx:number;sy:number;cx:number;cy:number}|null>(null);
@@ -34,6 +36,20 @@ export default function Canvas({canvasId}:{canvasId:string}) {
   useStatusShortcuts();
   useHistoryShortcuts();
   useHelpShortcut();
+
+  // `specialMode` is loaded from localStorage on the client, so it is not known
+  // during SSR. Only apply special-mode rendering after hydration so the server
+  // and first client render match (prevents a React hydration mismatch on the
+  // <canvas> vs dotted-grid <div> swap).
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Special mode is a night/dark experience only — force the dark theme on and
+  // keep it there (the light/dark toggle is disabled in Special mode).
+  useEffect(() => {
+    if (specialMode) setTheme('dark');
+  }, [specialMode, setTheme]);
   useEffect(()=>{
     const onKey=(e:KeyboardEvent)=>{ if(e.key==='Escape'&&connectingFrom){setConnectingFrom(null);useCanvasStore.setState({mouseWorld:null,magneticTarget:null});}};
     window.addEventListener('keydown', onKey);
@@ -118,7 +134,8 @@ export default function Canvas({canvasId}:{canvasId:string}) {
       id="viewport"
       ref={ref}
       style={viewportTransform}
-      className={`${panState?'panning':''} ${lassoState?'lassoing':''} ${busyClass}`}
+      data-theme={(specialMode&&mounted)?'dark':undefined}
+      className={`${panState?'panning':''} ${lassoState?'lassoing':''} ${busyClass}${(specialMode&&mounted)?' special-mode':''}`}
       onPointerDown={e=>{
         if((e.target as Element).closest('.node-card, .annotation'))return;
         if(e.shiftKey){if(editingId)return;setLassoState({sx:e.clientX,sy:e.clientY,cx:e.clientX,cy:e.clientY});(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);return;}
@@ -179,8 +196,14 @@ export default function Canvas({canvasId}:{canvasId:string}) {
       }}
       onWheel={e=>{e.preventDefault();const r=ref.current!.getBoundingClientRect();changeZoom((canvas?.viewport.zoom??1)*Math.exp(-e.deltaY*(e.ctrlKey?.008:.0018)),e.clientX-r.left,e.clientY-r.top)}}
     >
-      <div id="paper" aria-hidden="true" />
-      <div id="grid" aria-hidden="true" style={gridStyle} />
+      {(specialMode&&mounted)
+        ? <KineticGrid viewport={{x: canvas?.viewport.x ?? 0, y: canvas?.viewport.y ?? 0, zoom}} />
+        : (
+          <>
+            <div id="paper" aria-hidden="true" />
+            <div id="grid" aria-hidden="true" style={gridStyle} />
+          </>
+        )}
       {canvas ? (
         <div id="world" data-export-root style={{transform:`translate(${canvas.viewport.x}px,${canvas.viewport.y}px) scale(${zoom})`}}>
           <Edges />
@@ -218,6 +241,7 @@ export default function Canvas({canvasId}:{canvasId:string}) {
       <div className="zb-sep"/>
       <button className="zb-btn" onClick={fit} aria-label="Fit to screen" title="Fit to screen"><MagnifyingGlass size={16} weight="regular" aria-hidden="true"/></button>
       <ThemeToggle />
+      <button className={`zb-btn special-mode-btn${(specialMode&&mounted)?' is-active':''}`} type="button" aria-label="Toggle special mode" title="Special mode" aria-pressed={specialMode&&mounted} onPointerDown={event=>event.stopPropagation()} onClick={event=>{event.stopPropagation();const next=!specialMode;if(next)setTheme('dark');setSpecialMode(next)}}><Sparkle size={16} weight="regular" aria-hidden="true"/></button>
       <button className="zb-btn theme-manager-trigger" type="button" aria-label="Open themes" title="Themes" onPointerDown={event=>event.stopPropagation()} onClick={event=>{event.stopPropagation();setThemesOpen(true)}}><MagicWand size={16} weight="regular" aria-hidden="true"/></button>
       <div className="zb-sep"/>
       <div id="save-ind" className={saved?'show':''}><span className="dot"/>Saved</div>
