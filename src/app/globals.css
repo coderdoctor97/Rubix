@@ -479,9 +479,11 @@ body.is-dragging * {
   border-radius: var(--nc-radius, var(--radius));
   box-shadow: var(--nc-shadow, var(--shadow-sm)), var(--nc-style-shadow, none);
   padding: var(--nc-pad, var(--space-node-pad));
+  /* Layout architecture fix: content → meta → grip as distinct layers.
+     Text must never flow under meta. Flex column with content flexing. */
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0;
   transition: box-shadow 0.18s var(--ease-out), border-color 0.18s var(--ease-out);
   /* Material colour ladder — derives muted base + stronger mark from the node's OWN
      --tint (same hue family). Untinted → falls back to surface (neutral). */
@@ -654,7 +656,8 @@ body.is-dragging * {
 .style-paper { --grain: 0.10; }
 .style-highlight { --grain: 0.03; }
 .style-minimal { --grain: 0.015; }
-.node-top, .node-meta { position: relative; z-index: 1; }
+.node-top { position: relative; z-index: 1; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.node-meta { position: relative; z-index: 1; flex: 0 0 auto; }
 .nc-accent-top { z-index: 2; }
 
 /* -- Main-node accent bar (top edge) -------------------------------------- */
@@ -759,19 +762,23 @@ body.is-dragging * {
   }
 }
 
-/* ---- Node internals ---- */
+/* ---- Node internals — layout fix: content must not overlap meta ---- */
 .node-top {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: stretch;
   gap: 6px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .node-main {
   display: flex;
   align-items: flex-start;
   gap: 5px;
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
   padding-top: 2px;
 }
 
@@ -838,17 +845,18 @@ body.is-dragging * {
 }
 
 /* ---- Collapsed-branch metadata chips ----
-   Restored original semantics: [N hidden] + [NR/ NF / NM] summary.
-   Flex row with explicit gap so chips never visually merge into "hidden1F".
-   Each chip is an independent pill with its own boundary. */
+   Blocking fix: dedicated compact layout region, never overlapped by text.
+   No separator line — distinction via spacing/typography/chip styling.
+   Padding-right reserves breathing room for resize grip. */
 .node-meta {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 6px;
-  padding-top: 4px;
-  border-top: 1px dashed color-mix(in srgb, var(--line) 70%, transparent);
+  margin-top: 10px;
+  padding-right: 28px; /* reserve for 24px grip + 4px breathing */
+  flex: 0 0 auto;
+  min-height: 0;
 }
 
 .chip {
@@ -932,13 +940,15 @@ body.is-dragging * {
 }
 
 .node-content {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
   font-size: var(--text-node);
   line-height: var(--leading-body);
   font-weight: 400;
   color: var(--ink);
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   word-break: break-word;
   cursor: text;
   border-radius: var(--radius-xs);
@@ -971,6 +981,7 @@ body.is-dragging * {
   letter-spacing: -0.005em;
   color: var(--ink);
   overflow-wrap: anywhere;
+  word-break: break-word;
   min-width: 0;
 }
 
@@ -983,6 +994,8 @@ body.is-dragging * {
   letter-spacing: var(--tracking-normal);
   color: var(--ink);
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* Main concept — serif: the apex of the hierarchy (importance via family + size, not loudness). */
@@ -1006,13 +1019,19 @@ body.is-dragging * {
 }
 
 .node-editor-wrap {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .node-editor {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
   width: 100%;
   font-family: inherit;
   font-size: var(--text-node);
@@ -1025,6 +1044,7 @@ body.is-dragging * {
   resize: none;
   overflow: hidden;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   word-break: break-word;
   padding: 1px 3px;
   margin: 0 -3px;
@@ -3545,44 +3565,72 @@ body.is-dragging * {
   cursor: crosshair;
 }
 
-/* ---- Node resize grip ---- */
+/* ---- Node resize grip + is-sized layout fix ----
+   Blocking fix: when node has explicit size, content area scrolls internally,
+   meta stays fixed below content, grip stays separate with breathing room.
+   No text may flow under meta or grip. */
+.node-card.is-sized {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* contain internal scroll */
+}
+
 .node-card.is-sized .node-top {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .node-card.is-sized .node-main {
-  align-items: stretch;
+  flex: 1 1 auto;
   min-height: 0;
+  overflow: hidden;
+  align-items: stretch;
 }
 
 .node-card.is-sized .node-content,
-.node-card.is-sized .node-editor {
+.node-card.is-sized .node-editor-wrap,
+.node-card.is-sized .node-editor,
+.node-card.is-sized .node-rt,
+.node-card.is-sized .node-rt-editor,
+.node-card.is-sized .node-rt-editor .ProseMirror {
   flex: 1 1 auto;
   min-height: 0;
   height: auto;
   max-height: none;
   overflow-y: auto;
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .node-card.is-sized .node-editor {
   resize: none;
 }
 
+.node-card.is-sized .node-meta {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
 .resize-grip {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  z-index: 3;
-  width: 24px;
-  height: 24px;
+  right: 2px;
+  bottom: 2px;
+  z-index: 4;
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
   color: var(--faint);
-  opacity: 0.3;
+  opacity: 0.32;
   cursor: nwse-resize;
   touch-action: none;
-  transition: opacity 0.12s var(--ease-out), color 0.12s var(--ease-out);
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  border-radius: 4px;
+  transition: opacity 0.12s var(--ease-out), color 0.12s var(--ease-out), background 0.12s var(--ease-out);
 }
 
 .resize-grip::before {
@@ -3597,6 +3645,7 @@ body.is-dragging * {
 .resize-grip:hover {
   opacity: 1;
   color: var(--ink-2);
+  background: var(--surface);
 }
 
 /* ---- Annotations ---- */
