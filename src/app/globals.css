@@ -775,76 +775,120 @@ body.is-dragging * {
   padding-top: 2px;
 }
 
-/* ---- Marker / status dot (original Synapse marking system) ---- */
+/* ---- Marker / status dot (original Synapse marking system) ----
+   Restored + hardened for V2 materials: visible on classic/sticky/paper/highlight/minimal,
+   light + dark, tinted + untinted. None = hollow neutral, Failed/Review/Mastered = solid
+   with surface halo for separation from tinted backgrounds. */
 .status-dot {
   flex: 0 0 auto;
-  width: 16px;
-  height: 16px;
-  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
   border-radius: 50%;
-  border: 1.5px solid var(--line-2);
-  background: var(--chip-bg);
+  border: 2px solid var(--line-2);
+  background: var(--surface);
   padding: 0;
   cursor: pointer;
-  transition: transform 0.12s var(--ease-out), background 0.15s var(--ease-out), border-color 0.15s var(--ease-out);
+  box-shadow: 0 0 0 1px var(--surface);
+  transition: transform 0.14s var(--ease-out), background 0.15s var(--ease-out), border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
 }
 
 .status-dot:hover {
-  transform: scale(1.25);
+  transform: scale(1.18);
+  box-shadow: 0 0 0 1px var(--surface), 0 2px 6px -1px oklch(28% 0.015 55 / 0.18);
+}
+
+.status-dot:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.status-dot.dot-none {
+  background: var(--surface);
+  border-color: var(--line-2);
+  box-shadow: 0 0 0 1px var(--surface);
 }
 
 .status-dot.dot-failed {
   background: var(--danger);
-  border-color: var(--danger);
+  border-color: var(--surface);
+  box-shadow: 0 0 0 1px var(--surface), 0 1px 3px oklch(28% 0.015 55 / 0.18);
 }
 
 .status-dot.dot-review {
   background: var(--warning);
-  border-color: var(--warning);
+  border-color: var(--surface);
+  box-shadow: 0 0 0 1px var(--surface), 0 1px 3px oklch(28% 0.015 55 / 0.18);
 }
 
 .status-dot.dot-mastered {
   background: var(--success);
-  border-color: var(--success);
+  border-color: var(--surface);
+  box-shadow: 0 0 0 1px var(--surface), 0 1px 3px oklch(28% 0.015 55 / 0.18);
+}
+
+/* Ensure dot remains visible on transparent minimal cards */
+.style-minimal .status-dot {
+  box-shadow: 0 0 0 1px var(--surface), 0 0 0 2px var(--line);
+}
+.style-minimal .status-dot.dot-failed,
+.style-minimal .status-dot.dot-review,
+.style-minimal .status-dot.dot-mastered {
+  box-shadow: 0 0 0 1px var(--surface), 0 0 0 2px var(--surface), 0 1px 3px oklch(28% 0.015 55 / 0.18);
 }
 
 /* ---- Collapsed-branch metadata chips ----
-   Flex row with gap so "N hidden" and status chips ("1R") render as
-   separated pills — never merge into strings like "hidden1F". */
+   Restored original semantics: [N hidden] + [NR/ NF / NM] summary.
+   Flex row with explicit gap so chips never visually merge into "hidden1F".
+   Each chip is an independent pill with its own boundary. */
 .node-meta {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 2px;
+  gap: 8px;
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px dashed color-mix(in srgb, var(--line) 70%, transparent);
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
+  justify-content: center;
+  padding: 3px 9px;
   border-radius: var(--radius-full);
   font-size: 11px;
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
   color: var(--muted);
   background: var(--chip-bg);
+  border: 1px solid var(--line);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .chip b {
-  font-weight: 600;
+  font-weight: 700;
   color: inherit;
 }
 
 .chip-failed {
   color: var(--danger);
   background: var(--danger-soft);
+  border-color: color-mix(in srgb, var(--danger) 18%, var(--line));
 }
 
 .chip-review {
   color: var(--warning);
   background: var(--warning-soft);
+  border-color: color-mix(in srgb, var(--warning) 20%, var(--line));
+}
+
+.chip-mastered {
+  color: var(--success);
+  background: var(--success-soft);
+  border-color: color-mix(in srgb, var(--success) 18%, var(--line));
 }
 
 .dark .chip-failed,
@@ -855,6 +899,11 @@ body.is-dragging * {
 .dark .chip-review,
 [data-theme='dark'] .chip-review {
   color: var(--warning);
+}
+
+.dark .chip-mastered,
+[data-theme='dark'] .chip-mastered {
+  color: var(--success);
 }
 
 .chevron {
