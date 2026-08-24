@@ -7,6 +7,7 @@ import { readCanvasRaw } from '@/lib/persistence';
 import { serializeCanvas } from '@/lib/portability';
 import type { Folder, PageMeta } from '@/lib/types';
 import { FolderIcon, NoteIcon, PushPinIcon, PencilSimpleIcon, TrashIcon, List, CaretDoubleRight, Plus, CaretRight } from '@phosphor-icons/react';
+import MidnightSky from './MidnightSky';
 
 function defaultName(prefix: string): string {
   const d = new Date();
@@ -63,6 +64,7 @@ export default function Sidebar() {
   const sidebarOpen = useCanvasStore(s => s.sidebarOpen);
   const loadIndex = useCanvasStore(s => s.loadIndex);
   const setSidebarOpen = useCanvasStore(s => s.setSidebarOpen);
+  const specialMode = useCanvasStore(s => s.specialMode);
 
   const addFolder = useCanvasStore(s => s.addFolder);
   const addPage = useCanvasStore(s => s.addPage);
@@ -375,6 +377,7 @@ export default function Sidebar() {
           </>
         ) : (
           <>
+            {specialMode && <MidnightSky />}
             <div className="sidebar-header">
               <span className="sidebar-brand">
                 <span className="sidebar-brand-mark" aria-hidden="true"><LibraryMark size={15} /></span>
