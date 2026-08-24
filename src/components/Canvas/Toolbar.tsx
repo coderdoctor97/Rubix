@@ -1,7 +1,7 @@
 'use client';
 import Button from '../ui/Button';
 import { useCanvasStore } from '@/lib/store';
-import { MagicWandIcon, CaretDown, CaretUp, ArrowUUpLeft, ArrowURightDown } from '@phosphor-icons/react';
+import { MagicWandIcon, CaretDown, CaretUp, ArrowUUpLeft, ArrowURightDown, Plus, Sparkle } from '@phosphor-icons/react';
 
 export default function Toolbar({ onAdd, onAddText, onAddHeading, onCollapse, onExpand }: { onAdd: () => void; onAddText: () => void; onAddHeading: () => void; onCollapse: () => void; onExpand: () => void }) {
   const canvas = useCanvasStore(s => s.canvas);
@@ -20,14 +20,14 @@ export default function Toolbar({ onAdd, onAddText, onAddHeading, onCollapse, on
   return (
     <header id="toolbar" className="ui-float">
       <div className="brand">
-        <div className="brand-logo">✦</div>
+        <div className="brand-logo"><Sparkle size={16} weight="fill" aria-hidden="true" /></div>
         <div>
           <div className="brand-name">Synapse</div>
           <div className="brand-sub">ACTIVE RECALL CANVAS</div>
         </div>
       </div>
       <div className="tb-sep" />
-      <Button className="btn-primary" onClick={onAdd}>＋ New topic</Button>
+      <Button className="btn-primary" onClick={onAdd} aria-label="New topic" title="New topic"><Plus size={16} weight="regular" aria-hidden="true" /> New topic</Button>
       <Button onClick={onAddText} title="Add a text note" aria-label="Add a text note">Text</Button>
       <Button onClick={onAddHeading} title="Add a heading" aria-label="Add a heading">Heading</Button>
       <Button

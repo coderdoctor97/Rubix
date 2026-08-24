@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { useCanvasStore } from '@/lib/store';
 import type { Annotation } from '@/lib/types';
 import { parseImportedCanvas, serializeCanvas } from '@/lib/portability';
-import { DownloadSimple, UploadSimple } from '@phosphor-icons/react';
+import { DownloadSimple, UploadSimple, WarningCircle } from '@phosphor-icons/react';
 import ExportModal from './ExportModal';
 
 export default function DataPortability() {
@@ -163,11 +163,7 @@ export default function DataPortability() {
         >
           <div className="modal-card portability-modal-card" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()}>
             <div className="modal-icon">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 8v5" />
-                <path d="M12 16h.01" />
-              </svg>
+              <WarningCircle size={20} weight="regular" aria-hidden="true" />
             </div>
             <h3 id="portability-error-title">{errorTitle}</h3>
             <p>{error}</p>

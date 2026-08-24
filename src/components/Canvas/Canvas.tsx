@@ -9,7 +9,7 @@ import Annotation from './Annotation';
 import Edges from './Edges';
 import Toolbar from './Toolbar';
 import SelectionHint from './SelectionHint';
-import {MagnifyingGlass,MagicWand} from '@phosphor-icons/react';
+import {MagnifyingGlass,MagicWand,Plus,Minus} from '@phosphor-icons/react';
 import useStatusShortcuts from '@/hooks/useStatusShortcuts';
 import useHistoryShortcuts from '@/hooks/useHistoryShortcuts';
 import useHelpShortcut from '@/hooks/useHelpShortcut';
@@ -102,13 +102,14 @@ export default function Canvas({canvasId}:{canvasId:string}) {
   const busy=!!dragState||!!panState||!!lassoState;
   const busyClass=busy?'is-dragging':'';
 
-  const viewportStyle:React.CSSProperties={
+  const gridStyle:React.CSSProperties={
     backgroundSize:`${26*zoom}px ${26*zoom}px`,
     backgroundPosition:`${canvas?.viewport.x??0}px ${canvas?.viewport.y??0}px`,
   };
+  let viewportTransform:React.CSSProperties|undefined;
   if(panState){
     const pd=pending.current;
-    if(pd.active)viewportStyle.transform=`translate(${pd.panDx}px,${pd.panDy}px)`;
+    if(pd.active)viewportTransform={transform:`translate(${pd.panDx}px,${pd.panDy}px)`};
   }
 
   return (
@@ -116,7 +117,7 @@ export default function Canvas({canvasId}:{canvasId:string}) {
     <div
       id="viewport"
       ref={ref}
-      style={viewportStyle}
+      style={viewportTransform}
       className={`${panState?'panning':''} ${lassoState?'lassoing':''} ${busyClass}`}
       onPointerDown={e=>{
         if((e.target as Element).closest('.node-card, .annotation'))return;
@@ -178,6 +179,8 @@ export default function Canvas({canvasId}:{canvasId:string}) {
       }}
       onWheel={e=>{e.preventDefault();const r=ref.current!.getBoundingClientRect();changeZoom((canvas?.viewport.zoom??1)*Math.exp(-e.deltaY*(e.ctrlKey?.008:.0018)),e.clientX-r.left,e.clientY-r.top)}}
     >
+      <div id="paper" aria-hidden="true" />
+      <div id="grid" aria-hidden="true" style={gridStyle} />
       {canvas ? (
         <div id="world" data-export-root style={{transform:`translate(${canvas.viewport.x}px,${canvas.viewport.y}px) scale(${zoom})`}}>
           <Edges />
@@ -209,9 +212,9 @@ export default function Canvas({canvasId}:{canvasId:string}) {
       <DataPortability />
     </div>
     <div id="viewbar" className="ui-float">
-      <button className="zb-btn" onClick={()=>changeZoom((canvas?.viewport.zoom??1)/1.2)} aria-label="Zoom out">−</button>
+      <button className="zb-btn" onClick={()=>changeZoom((canvas?.viewport.zoom??1)/1.2)} aria-label="Zoom out"><Minus size={16} weight="regular" aria-hidden="true"/></button>
       <button className="zb-btn" id="zoom-label" onClick={()=>changeZoom(1)} aria-label="Reset zoom">{Math.round((canvas?.viewport.zoom??1)*100)}%</button>
-      <button className="zb-btn" onClick={()=>changeZoom((canvas?.viewport.zoom??1)*1.2)} aria-label="Zoom in">＋</button>
+      <button className="zb-btn" onClick={()=>changeZoom((canvas?.viewport.zoom??1)*1.2)} aria-label="Zoom in"><Plus size={16} weight="regular" aria-hidden="true"/></button>
       <div className="zb-sep"/>
       <button className="zb-btn" onClick={fit} aria-label="Fit to screen" title="Fit to screen"><MagnifyingGlass size={16} weight="regular" aria-hidden="true"/></button>
       <ThemeToggle />
