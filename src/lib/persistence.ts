@@ -38,12 +38,37 @@ export function migrateCanvas(raw: unknown): CanvasData | null {
       }
       if (deduped.length > 0) connections = deduped;
     }
-    // Return migrated canvas, preserving all existing fields including optional tint/annotations
+    // Return migrated canvas, preserving all existing fields including optional tint/annotations/presentationOrder
     const result: CanvasData = {
       ...(data as object),
       viewport,
       connections: connections ?? [],
     } as unknown as CanvasData;
+    // Clean invalid presentationOrder values (additive, backward compatible)
+    try {
+      const nodes = (result as any).nodes as Record<string, any> | undefined;
+      if (nodes && typeof nodes === 'object') {
+        for (const n of Object.values(nodes)) {
+          if (n && typeof n === 'object') {
+            const po = (n as any).presentationOrder;
+            if (po !== undefined) {
+              if (!(typeof po === 'number' && Number.isFinite(po) && po > 0 && Number.isInteger(po))) {
+                delete (n as any).presentationOrder;
+              }
+            }
+          }
+        }
+        // Optional: re-normalize to contiguous if any valid present
+        const ordered = Object.values(nodes)
+          .filter((x: any) => typeof x.presentationOrder === 'number')
+          .sort((a: any, b: any) => a.presentationOrder - b.presentationOrder);
+        ordered.forEach((node: any, idx: number) => {
+          node.presentationOrder = idx + 1;
+        });
+      }
+    } catch {
+      // ignore migration errors for presentationOrder
+    }
     // Attach annotations when present
     if (Array.isArray(data.annotations)) {
       const valid = (data.annotations as unknown[]).filter((a): a is Annotation => {

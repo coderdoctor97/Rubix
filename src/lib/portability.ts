@@ -157,6 +157,11 @@ export function parseImportedCanvas(raw: string): ParseImportResult {
     } else if (n.tint === null) {
       node.tint = null;
     }
+    // presentationOrder: optional positive integer — preserved if valid, else dropped
+    const po = (n as any).presentationOrder;
+    if (typeof po === 'number' && Number.isFinite(po) && po > 0 && Number.isInteger(po)) {
+      node.presentationOrder = po;
+    }
     // Only set tint if present to keep optional semantics correct (undefined is also valid)
     // But we handle both null and missing; missing will stay undefined which is valid per types
 
@@ -172,6 +177,18 @@ export function parseImportedCanvas(raw: string): ParseImportResult {
     if (node.parentId !== null && !nodes[node.parentId]) {
       return { ok: false, error: 'File contains nodes with missing parents.' };
     }
+  }
+
+  // Normalize presentationOrder to contiguous 1..n if any present
+  try {
+    const ordered = Object.values(nodes)
+      .filter((n) => typeof n.presentationOrder === 'number' && Number.isFinite(n.presentationOrder))
+      .sort((a, b) => (a.presentationOrder! - b.presentationOrder!));
+    ordered.forEach((node, idx) => {
+      node.presentationOrder = idx + 1;
+    });
+  } catch {
+    // ignore
   }
 
   // name: string default "Imported canvas"
