@@ -60,8 +60,9 @@ export default function HelpPanel() {
      <section className="help-section">
       <h3>Shortcuts</h3>
       <ul>
-       <li>While editing a node, <code>Ctrl+B</code> / <code>Ctrl+I</code> / <code>Ctrl+U</code> (<code>⌘</code> on Mac) make the selected text bold, italic, or underlined.</li>
-       <li>Press Esc to deselect a node or close an open panel.</li>
+       <li>Select a node, then press 1, 2, or 3 to tag it Failed, Review, or Mastered. Press 0 to clear the tag.</li>
+       <li>While editing a node, <code>Ctrl+B</code> / <code>Ctrl+I</code> / <code>Ctrl+U</code> (<code>âŒ˜</code> on Mac) make the selected text bold, italic, or underlined.</li>
+       <li>Press Esc to deselect.</li>
       </ul>
      </section>
      <section className="help-section">
