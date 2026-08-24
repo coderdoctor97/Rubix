@@ -8,44 +8,281 @@ import {tidyPositions} from './operations/layout';
 import {makeNode} from './operations/nodes';
 import {HORIZONTAL_INDENT,NODE_MIN_HEIGHT,NODE_WIDTH,VERTICAL_GAP,type Annotation,type AnnotationKind,type CanvasData,type Connection,type CanvasIndex,type CustomTheme,type HeatmapMode,type Node,type NodeSize,type NodeStyle,type Position,type Status,type ThemeId} from './types';
 
-type State={canvas:CanvasData|null;editingId:string|null;justCreatedId:string|null;lastMarkedId:string|null;saved:boolean;heatmapMode:HeatmapMode;theme:ThemeId;customThemes:Record<ThemeId,CustomTheme>;index:CanvasIndex|null;sidebarOpen:boolean;helpOpen:boolean;selectedNodeIds:string[];past:Snapshot[];future:Snapshot[];focusMode:boolean;revealIds:string[];hoverId:string|null;connectingFrom:string|null;mouseWorld:Position|null;magneticTarget:string|null;selectedConnection:Connection|null;setSelectedConnection:(c:Connection|null)=>void;setConnectingFrom:(id:string|null)=>void;setMouseWorld:(pos:Position|null)=>void;setMagneticTarget:(id:string|null)=>void;init:(id:string,size:Position)=>void;update:(fn:(c:CanvasData)=>void)=>void;createRoot:(size:Position)=>void;createChild:(id:string)=>void;createIndependentTopic:(fromId:string)=>void;createAnnotation:(kind:AnnotationKind,size?:Position)=>void;updateAnnotation:(id:string,content:string)=>void;deleteAnnotation:(id:string)=>void;moveAnnotation:(id:string,position:Position)=>void;remove:(id:string)=>void;createConnection:(a:string,b:string)=>void;removeConnection:(a:string,b:string)=>void;setNodeTint:(id:string,tint:string|null)=>void;setNodeStyle:(id:string,style:NodeStyle|undefined)=>void;setNodeStatus:(id:string,status:Status)=>void;setNodeSize:(id:string,size:NodeSize|null)=>void;duplicateNode:(id:string)=>void;replaceCanvasContents:(name:string,nodes:Record<string,Node>,viewport:{x:number;y:number;zoom:number},annotations?:Annotation[])=>void;setEditing:(id:string|null)=>void;flashSaved:()=>void;setHeatmapMode:(mode:HeatmapMode)=>void;setTheme:(themeId:ThemeId)=>void;createCustomTheme:(name:string,base:'light'|'dark',colors:Record<string,string>)=>ThemeId;updateCustomTheme:(id:ThemeId,updates:Partial<Pick<CustomTheme,'name'|'base'|'colors'>>)=>void;deleteCustomTheme:(id:ThemeId)=>void;loadIndex:()=>void;openPage:(id:string)=>void;setSidebarOpen:(open:boolean)=>void;setHelpOpen:(open:boolean)=>void;toggleHelp:()=>void;addFolder:(name:string)=>void;addPage:(name:string,folderId:string|null)=>string;renamePage:(id:string,name:string)=>void;renameFolder:(id:string,name:string)=>void;deletePage:(id:string)=>void;deleteFolder:(id:string)=>void;movePageToFolder:(pageId:string,folderId:string|null)=>void;toggleFolderPin:(id:string)=>void;togglePagePin:(id:string)=>void;moveNodes:(moves:{id:string;position:Position}[])=>void;moveNodesLive:(moves:{id:string;position:Position}[])=>void;selectForInteraction:(id:string)=>void;selectNodes:(ids:string[])=>void;selectNode:(id:string)=>void;clearSelection:()=>void;recordHistory:()=>void;undo:()=>void;redo:()=>void;clearHistory:()=>void;setFocusMode:(v:boolean)=>void;setRevealIds:(ids:string[])=>void;setHoverId:(id:string|null)=>void;toggleNode:(id:string)=>void;expandAll:()=>void;collapseAll:()=>void;applyTidy:()=>void};
+type State={
+  canvas:CanvasData|null;
+  editingId:string|null;
+  justCreatedId:string|null;
+  lastMarkedId:string|null;
+  saved:boolean;
+  heatmapMode:HeatmapMode;
+  theme:ThemeId;
+  customThemes:Record<ThemeId,CustomTheme>;
+  index:CanvasIndex|null;
+  sidebarOpen:boolean;
+  helpOpen:boolean;
+  selectedNodeIds:string[];
+  past:Snapshot[];
+  future:Snapshot[];
+  focusMode:boolean;
+  presentationMode:boolean;
+  revealIds:string[];
+  hoverId:string|null;
+  connectingFrom:string|null;
+  mouseWorld:Position|null;
+  magneticTarget:string|null;
+  selectedConnection:Connection|null;
+  setSelectedConnection:(c:Connection|null)=>void;
+  setConnectingFrom:(id:string|null)=>void;
+  setMouseWorld:(pos:Position|null)=>void;
+  setMagneticTarget:(id:string|null)=>void;
+  init:(id:string,size:Position)=>void;
+  update:(fn:(c:CanvasData)=>void)=>void;
+  createRoot:(size:Position)=>void;
+  createChild:(id:string)=>void;
+  createIndependentTopic:(fromId:string)=>void;
+  createAnnotation:(kind:AnnotationKind,size?:Position)=>void;
+  updateAnnotation:(id:string,content:string)=>void;
+  deleteAnnotation:(id:string)=>void;
+  moveAnnotation:(id:string,position:Position)=>void;
+  remove:(id:string)=>void;
+  createConnection:(a:string,b:string)=>void;
+  removeConnection:(a:string,b:string)=>void;
+  setNodeTint:(id:string,tint:string|null)=>void;
+  setNodeStyle:(id:string,style:NodeStyle|undefined)=>void;
+  setNodeStatus:(id:string,status:Status)=>void;
+  setNodeSize:(id:string,size:NodeSize|null)=>void;
+  duplicateNode:(id:string)=>void;
+  addToPresentation:(id:string)=>void;
+  removeFromPresentation:(id:string)=>void;
+  reorderPresentation:(draggedId:string, targetIndex:number)=>void;
+  replaceCanvasContents:(name:string,nodes:Record<string,Node>,viewport:{x:number;y:number;zoom:number},annotations?:Annotation[])=>void;
+  setEditing:(id:string|null)=>void;
+  flashSaved:()=>void;
+  setHeatmapMode:(mode:HeatmapMode)=>void;
+  setTheme:(themeId:ThemeId)=>void;
+  createCustomTheme:(name:string,base:'light'|'dark',colors:Record<string,string>)=>ThemeId;
+  updateCustomTheme:(id:ThemeId,updates:Partial<Pick<CustomTheme,'name'|'base'|'colors'>>)=>void;
+  deleteCustomTheme:(id:ThemeId)=>void;
+  loadIndex:()=>void;
+  openPage:(id:string)=>void;
+  setSidebarOpen:(open:boolean)=>void;
+  setHelpOpen:(open:boolean)=>void;
+  toggleHelp:()=>void;
+  addFolder:(name:string)=>void;
+  addPage:(name:string,folderId:string|null)=>string;
+  renamePage:(id:string,name:string)=>void;
+  renameFolder:(id:string,name:string)=>void;
+  deletePage:(id:string)=>void;
+  deleteFolder:(id:string)=>void;
+  movePageToFolder:(pageId:string,folderId:string|null)=>void;
+  toggleFolderPin:(id:string)=>void;
+  togglePagePin:(id:string)=>void;
+  moveNodes:(moves:{id:string;position:Position}[])=>void;
+  moveNodesLive:(moves:{id:string;position:Position}[])=>void;
+  selectForInteraction:(id:string)=>void;
+  selectNodes:(ids:string[])=>void;
+  selectNode:(id:string)=>void;
+  clearSelection:()=>void;
+  recordHistory:()=>void;
+  undo:()=>void;
+  redo:()=>void;
+  clearHistory:()=>void;
+  setFocusMode:(v:boolean)=>void;
+  setPresentationMode:(v:boolean)=>void;
+  setRevealIds:(ids:string[])=>void;
+  setHoverId:(id:string|null)=>void;
+  toggleNode:(id:string)=>void;
+  expandAll:()=>void;
+  collapseAll:()=>void;
+  applyTidy:()=>void
+};
+
 const initialSettings=typeof window==='undefined'?{heatmapMode:'mini' as HeatmapMode,theme:'light' as ThemeId}:loadUISettings();
 const initialCustomThemes=typeof window==='undefined'?{} as Record<ThemeId,CustomTheme>:loadCustomThemes();
 let timer:ReturnType<typeof setTimeout>|undefined,flash:ReturnType<typeof setTimeout>|undefined;
 const MAX_HISTORY = 50;
 type Snapshot={nodes:Record<string,Node>;annotations:Annotation[]};
 function cloneNodes(nodes: Record<string, Node>): Record<string, Node> {
-  try {
-    return structuredClone(nodes);
-  } catch {
-    return JSON.parse(JSON.stringify(nodes));
-  }
+  try { return structuredClone(nodes); } catch { return JSON.parse(JSON.stringify(nodes)); }
 }
 function seed(id:string):CanvasData {const t=Date.now();return {id,name:'My Canvas',nodes:{},viewport:{x:0,y:0,zoom:1},connections:[],createdAt:t,updatedAt:t};}
-export const useCanvasStore=create<State>((set,get)=>({canvas:null,editingId:null,justCreatedId:null,lastMarkedId:null,saved:false,heatmapMode:initialSettings.heatmapMode,theme:initialSettings.theme,customThemes:initialCustomThemes,index:null,sidebarOpen:true,helpOpen:false,selectedNodeIds:[],past:[],future:[],focusMode:false,revealIds:[],hoverId:null,connectingFrom:null,mouseWorld:null,magneticTarget:null,selectedConnection:null,setFocusMode:(focusMode)=>set({focusMode}),setRevealIds:(revealIds)=>set({revealIds}),setHoverId:(hoverId)=>set({hoverId}),setConnectingFrom:(connectingFrom)=>set({connectingFrom,magneticTarget:connectingFrom?get().magneticTarget:null}),setMouseWorld:(mouseWorld)=>set({mouseWorld}),setMagneticTarget:(magneticTarget)=>set({magneticTarget}),setSelectedConnection:(selectedConnection)=>set({selectedConnection}),setHeatmapMode:(mode)=>{set({heatmapMode:mode});saveUISettings({heatmapMode:mode,theme:get().theme})},setTheme:(themeId)=>{set({theme:themeId});saveUISettings({heatmapMode:get().heatmapMode,theme:themeId});applyTheme(themeId,get().customThemes)},createCustomTheme:(name,base,colors)=>{const now=Date.now(),id=`custom-${now}-${Math.random().toString(36).slice(2,8)}`,theme:CustomTheme={id,name,base,colors,createdAt:now,updatedAt:now},customThemes={...get().customThemes,[id]:theme};set({customThemes});saveCustomThemes(customThemes);return id},updateCustomTheme:(id,updates)=>{const existing=get().customThemes[id];if(!existing)return;const customThemes={...get().customThemes,[id]:{...existing,...updates,updatedAt:Date.now()}};set({customThemes});saveCustomThemes(customThemes);if(get().theme===id)applyTheme(id,customThemes)},deleteCustomTheme:(id)=>{if(!get().customThemes[id])return;const customThemes={...get().customThemes};delete customThemes[id];set({customThemes});saveCustomThemes(customThemes);if(get().theme===id)get().setTheme('light')},setNodeTint:(id,tint)=>{get().update(c=>{const n=c.nodes[id];if(!n)return;n.tint=tint;n.updatedAt=Date.now()});set({lastMarkedId:id});setTimeout(()=>set({lastMarkedId:null}),1800)},setNodeStyle:(id,style)=>{get().update(c=>{const n=c.nodes[id];if(!n)return;if(style===undefined){delete n.style;}else{n.style=style;}n.updatedAt=Date.now()})},setNodeStatus:(id,status)=>{get().update(c=>{const n=c.nodes[id];if(!n)return;n.status=status;n.updatedAt=Date.now()});set({lastMarkedId:id});setTimeout(()=>set({lastMarkedId:null}),1800)},createConnection:(a,b)=>{if(a===b)return;const c=get().canvas;if(!c||!c.nodes[a]||!c.nodes[b])return;const pair=[a,b].sort() as[string,string];get().update(x=>{if((x.connections??[]).some(cn=>cn.a===pair[0]&&cn.b===pair[1]))return;x.connections=[...(x.connections??[]),{a:pair[0],b:pair[1]}]})},removeConnection:(a,b)=>{const c=get().canvas;if(!c)return;const pair=[a,b].sort() as[string,string];get().update(x=>{x.connections=(x.connections??[]).filter(cn=>!(cn.a===pair[0]&&cn.b===pair[1]))})},
+function normalizePresentationOrderInPlace(nodes: Record<string, Node>) {
+  const ordered = Object.values(nodes)
+    .filter(n => typeof n.presentationOrder === 'number' && Number.isFinite(n.presentationOrder))
+    .sort((a,b) => (a.presentationOrder! - b.presentationOrder!));
+  ordered.forEach((node, idx) => {
+    node.presentationOrder = idx + 1;
+    node.updatedAt = Date.now();
+  });
+}
 
-// Live node-size update without creating an undo-history snapshot.
-// Used by Node.tsx during grip-drag so edges track the card boundary in real time.
-// History is recorded at grip-down (in Node.tsx) so the undo target is the pre-drag size.
-setNodeSize:(id,size)=>set(s=>{if(!s.canvas)return s;const nodes={...s.canvas.nodes};const existing=nodes[id];if(!existing)return s;nodes[id]={...existing,size,updatedAt:Date.now()};return {canvas:{...s.canvas,nodes}}}),
-duplicateNode:(id)=>{const c=get().canvas;if(!c||!c.nodes[id])return;const src=c.nodes[id];const t=Date.now();const offset=Math.max(NODE_WIDTH,src.size?.width??NODE_WIDTH)+20;get().update(cn=>{const nid=crypto.randomUUID();cn.nodes[nid]=makeNode(nid,src.content,src.parentId,{x:src.position.x+offset,y:src.position.y+offset});cn.nodes[nid].status=src.status;if(src.tint)cn.nodes[nid].tint=src.tint;if(src.size)cn.nodes[nid].size={...src.size};cn.nodes[nid].createdAt=t;cn.nodes[nid].updatedAt=t})},replaceCanvasContents:(name,nodes,viewport,annotations)=>{const cur=get().canvas;if(!cur)return;const canvas={...cur,name,nodes:structuredClone(nodes) as Record<string,Node>,viewport:{...viewport},connections:[],...(annotations?{annotations:[...annotations]}:{}),updatedAt:Date.now()};clearTimeout(timer);timer=setTimeout(()=>{saveCanvas(canvas);get().flashSaved()},400);set({canvas,editingId:null,justCreatedId:null,selectedNodeIds:[],past:[],future:[]})},loadIndex:()=>{if(get().index!==null)return;const index=loadPersistedIndex();set({index})},openPage:(id)=>{get().loadIndex();const canvas=loadOrCreateCanvas(id);set({canvas,editingId:null,justCreatedId:null,selectedNodeIds:[],past:[],future:[]})},setSidebarOpen:(open)=>set({sidebarOpen:open}),setHelpOpen:(open)=>set({helpOpen:open}),toggleHelp:()=>set(s=>({helpOpen:!s.helpOpen})),addFolder:(name)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx) return;}const result=createFolder(idx,name,null);saveIndex(result.index);set({index:result.index})},addPage:(name,folderId)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx) return '';}const result=createPageMeta(idx,name,folderId);if(!result.page.id) return '';saveIndex(result.index);set({index:result.index});return result.page.id},renamePage:(id,name)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx) return;}const trimmed=name.trim();if(!trimmed) return;const next=renamePageOp(idx,id,trimmed);if(next===idx) return;saveIndex(next);set({index:next});updateCanvasName(id,trimmed);if(get().canvas?.id===id){get().update(c=>{c.name=trimmed})}},renameFolder:(id,name)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx) return;}const trimmed=name.trim();if(!trimmed) return;const next=renameFolderOp(idx,id,trimmed);if(next===idx) return;saveIndex(next);set({index:next})},deletePage:(id)=>{if(id==='default') return;let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx) return;}const next=deletePageMeta(idx,id);if(next===idx) return;saveIndex(next);set({index:next});deleteCanvasData(id)},deleteFolder:(id)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx)return;}const next=deleteFolderOp(idx,id);if(next===idx)return;saveIndex(next);set({index:next})},movePageToFolder:(pageId,folderId)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx)return;}const next=movePageOp(idx,pageId,folderId);if(next===idx)return;saveIndex(next);set({index:next})},toggleFolderPin:(id)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx)return;}const next=toggleFolderPinned(idx,id);if(next===idx)return;saveIndex(next);set({index:next})},togglePagePin:(id)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx)return;}const next=togglePagePinned(idx,id);if(next===idx)return;saveIndex(next);set({index:next})},moveNodes:(moves)=>{if(!moves.length)return;get().update(c=>{moves.forEach(m=>{const n=c.nodes[m.id];if(n){n.position=m.position;n.updatedAt=Date.now()}})})},moveNodesLive:(moves)=>{if(!moves.length)return;set(s=>{if(!s.canvas)return s;const c=structuredClone(s.canvas);moves.forEach(m=>{const n=c.nodes[m.id];if(n){n.position=m.position;n.updatedAt=Date.now()}});c.updatedAt=Date.now();clearTimeout(timer);timer=setTimeout(()=>{saveCanvas(c);get().flashSaved()},400);return {canvas:c}})},selectForInteraction:(id)=>set(s=>s.selectedNodeIds.includes(id)?s:{selectedNodeIds:[id]}),selectNodes:(ids)=>set({selectedNodeIds:ids}),selectNode:(id)=>set({selectedNodeIds:[id]}),clearSelection:()=>set({selectedNodeIds:[]}),recordHistory:()=>{const c=get().canvas;if(!c) return;const snap:Snapshot={nodes:cloneNodes(c.nodes),annotations:(c.annotations??[]).map(a=>({...a}))};set(s=>{const past=[...s.past,snap];if(past.length>MAX_HISTORY) past.shift();return {past,future:[]}})},undo:()=>set(s=>{if(!s.canvas||s.past.length===0) return s;const past=[...s.past];const snap=past.pop()!;const future=[...s.future,{nodes:cloneNodes(s.canvas.nodes),annotations:(s.canvas.annotations??[]).map(a=>({...a}))}];if(future.length>MAX_HISTORY) future.shift();const canvas={...s.canvas!,nodes:snap.nodes,annotations:snap.annotations,updatedAt:Date.now()};clearTimeout(timer);timer=setTimeout(()=>{saveCanvas(canvas);get().flashSaved()},400);return {past,future,canvas,editingId:null,justCreatedId:null,selectedNodeIds:[]}}),redo:()=>set(s=>{if(!s.canvas||s.future.length===0) return s;const future=[...s.future];const snap=future.pop()!;const past=[...s.past,{nodes:cloneNodes(s.canvas.nodes),annotations:(s.canvas.annotations??[]).map(a=>({...a}))}];if(past.length>MAX_HISTORY) past.shift();const canvas={...s.canvas!,nodes:snap.nodes,annotations:snap.annotations,updatedAt:Date.now()};clearTimeout(timer);timer=setTimeout(()=>{saveCanvas(canvas);get().flashSaved()},400);return {past,future,canvas,editingId:null,justCreatedId:null,selectedNodeIds:[]}}),clearHistory:()=>set({past:[],future:[]}),toggleNode:(id)=>{const c=get().canvas;if(!c)return;const n=c.nodes[id];if(!n)return;const wasCollapsed=n.isCollapsed;get().update(x=>{x.nodes[id].isCollapsed=!x.nodes[id].isCollapsed});if(wasCollapsed){const revealed=visibleSubtree(c,id);if(revealed.length){set({revealIds:revealed});setTimeout(()=>set({revealIds:[]}),600)}}else{set({revealIds:[]})}},expandAll:()=>{const c=get().canvas;if(!c)return;const collapsed=Object.values(c.nodes).filter(n=>n.isCollapsed&&children(c,n.id).length);if(!collapsed.length)return;const revealed:string[]=[],seen=new Set<string>();collapsed.forEach(n=>visibleSubtree(c,n.id).forEach(id=>{if(!seen.has(id)){seen.add(id);revealed.push(id)}}));get().update(x=>Object.values(x.nodes).forEach(n=>n.isCollapsed=false));if(revealed.length){set({revealIds:revealed});setTimeout(()=>set({revealIds:[]}),600)}},collapseAll:()=>{get().update(c=>Object.values(c.nodes).forEach(n=>{if(children(c,n.id).length)n.isCollapsed=true}));set({revealIds:[]})},applyTidy:()=>{const c=get().canvas;if(!c)return;if(!Object.keys(c.nodes).length)return;const moves=tidyPositions(c.nodes);if(!moves.length)return;get().update(x=>{moves.forEach(m=>{const n=x.nodes[m.id];if(n){n.position=m.position;n.updatedAt=Date.now()}})})},init:(id,size)=>{let c=loadCanvas(id)||seed(id);if(!loadCanvas(id)){const ns=Object.values(c.nodes);const minX=Math.min(...ns.map(n=>n.position.x)),minY=Math.min(...ns.map(n=>n.position.y)),maxX=Math.max(...ns.map(n=>n.position.x+NODE_WIDTH)),maxY=Math.max(...ns.map(n=>n.position.y+NODE_MIN_HEIGHT));const z=Math.min((size.x-110)/(maxX-minX),(size.y-110)/(maxY-minY),1);c.viewport={zoom:z,x:(size.x-(maxX-minX)*z)/2-minX*z,y:(size.y-(maxY-minY)*z)/2-minY*z};saveCanvas(c)}if(Object.keys(c.nodes).length===0){c.viewport={x:0,y:0,zoom:1}}set({canvas:c,past:[],future:[]})},update:(fn)=>set(s=>{if(!s.canvas)return s;const before:Snapshot={nodes:cloneNodes(s.canvas.nodes),annotations:(s.canvas.annotations??[]).map(a=>({...a}))};const c=structuredClone(s.canvas);fn(c);c.updatedAt=Date.now();const changed=JSON.stringify(before)!==JSON.stringify({nodes:c.nodes,annotations:c.annotations??[]});clearTimeout(timer);timer=setTimeout(()=>{saveCanvas(c);get().flashSaved()},400);if(!changed) return {canvas:c};const past=[...s.past,before];if(past.length>MAX_HISTORY) past.shift();return {canvas:c,past,future:[]}}),createRoot:(size)=>{const c=get().canvas;if(!c)return;const id=crypto.randomUUID(),r=roots(c).length*46,p={x:(size.x/2-c.viewport.x)/c.viewport.zoom-NODE_WIDTH/2+r,y:(size.y/2-c.viewport.y)/c.viewport.zoom-NODE_MIN_HEIGHT/2+r*.6};get().update(x=>{x.nodes[id]=makeNode(id,'',null,p)});set({editingId:id,justCreatedId:id});setTimeout(()=>set({justCreatedId:null}),5200)},createChild:(parentId)=>{const c=get().canvas;if(!c)return;const p=c.nodes[parentId],kids=children(c,parentId),id=crypto.randomUUID(),pos={x:p.position.x+HORIZONTAL_INDENT,y:kids.length?Math.max(...kids.map(n=>n.position.y))+NODE_MIN_HEIGHT+VERTICAL_GAP:p.position.y+NODE_MIN_HEIGHT+VERTICAL_GAP};get().update(x=>{x.nodes[id]=makeNode(id,'',parentId,pos);x.nodes[parentId].isCollapsed=false});set({editingId:id,selectedNodeIds:[id],justCreatedId:id});setTimeout(()=>set({justCreatedId:null}),5200)},createIndependentTopic:(fromId)=>{const c=get().canvas;if(!c)return;const p=c.nodes[fromId];if(!p)return;const id=crypto.randomUUID(),pos={x:p.position.x+NODE_WIDTH+80,y:p.position.y+60};get().update(x=>{x.nodes[id]=makeNode(id,'',null,pos)});set({editingId:id,selectedNodeIds:[id],justCreatedId:id});setTimeout(()=>set({justCreatedId:null}),5200)},createAnnotation:(kind,size)=>{const c=get().canvas;if(!c)return;const id=crypto.randomUUID(),vw=size??{x:window.innerWidth,y:window.innerHeight},pos={x:(vw.x/2-c.viewport.x)/c.viewport.zoom,y:(vw.y/2-c.viewport.y)/c.viewport.zoom};get().update(x=>{x.annotations=[...(x.annotations??[]),{id,kind,content:'',position:pos,createdAt:Date.now(),updatedAt:Date.now()}]});set({justCreatedId:id});setTimeout(()=>set({justCreatedId:null}),5200)},updateAnnotation:(id,content)=>get().update(c=>{const a=(c.annotations??[]).find(x=>x.id===id);if(a){a.content=content;a.updatedAt=Date.now()}}),deleteAnnotation:(id)=>get().update(c=>{c.annotations=(c.annotations??[]).filter(a=>a.id!==id)}),moveAnnotation:(id,position)=>get().update(c=>{const a=(c.annotations??[]).find(x=>x.id===id);if(a){a.position={...position};a.updatedAt=Date.now()}}),remove:(id)=>{const c=get().canvas;if(!c) return;const ids=new Set([id,...descendants(c,id)]);get().update(c2=>{const toRemove=[id,...descendants(c2,id)];toRemove.forEach(x=>delete c2.nodes[x]);c2.connections=c2.connections.filter(cn=>!toRemove.some(r=>cn.a===r||cn.b===r))});set(s=>({selectedNodeIds:s.selectedNodeIds.filter(x=>!ids.has(x))}))},setEditing:(editingId)=>set({editingId}),flashSaved:()=>{set({saved:true});clearTimeout(flash);flash=setTimeout(()=>set({saved:false}),1600)}}));
+export const useCanvasStore=create<State>((set,get)=>({
+  canvas:null,editingId:null,justCreatedId:null,lastMarkedId:null,saved:false,
+  heatmapMode:initialSettings.heatmapMode,theme:initialSettings.theme,customThemes:initialCustomThemes,
+  index:null,sidebarOpen:true,helpOpen:false,selectedNodeIds:[],past:[],future:[],
+  focusMode:false,presentationMode:false,revealIds:[],hoverId:null,connectingFrom:null,mouseWorld:null,magneticTarget:null,selectedConnection:null,
+  setFocusMode:(focusMode)=>set({focusMode}),
+  setPresentationMode:(presentationMode)=>set({presentationMode}),
+  setRevealIds:(revealIds)=>set({revealIds}),
+  setHoverId:(hoverId)=>set({hoverId}),
+  setConnectingFrom:(connectingFrom)=>set({connectingFrom,magneticTarget:connectingFrom?get().magneticTarget:null}),
+  setMouseWorld:(mouseWorld)=>set({mouseWorld}),
+  setMagneticTarget:(magneticTarget)=>set({magneticTarget}),
+  setSelectedConnection:(selectedConnection)=>set({selectedConnection}),
+  setHeatmapMode:(mode)=>{set({heatmapMode:mode});saveUISettings({heatmapMode:mode,theme:get().theme})},
+  setTheme:(themeId)=>{set({theme:themeId});saveUISettings({heatmapMode:get().heatmapMode,theme:themeId});applyTheme(themeId,get().customThemes)},
+  createCustomTheme:(name,base,colors)=>{const now=Date.now(),id=`custom-${now}-${Math.random().toString(36).slice(2,8)}`,theme:CustomTheme={id,name,base,colors,createdAt:now,updatedAt:now},customThemes={...get().customThemes,[id]:theme};set({customThemes});saveCustomThemes(customThemes);return id},
+  updateCustomTheme:(id,updates)=>{const existing=get().customThemes[id];if(!existing)return;const customThemes={...get().customThemes,[id]:{...existing,...updates,updatedAt:Date.now()}};set({customThemes});saveCustomThemes(customThemes);if(get().theme===id)applyTheme(id,customThemes)},
+  deleteCustomTheme:(id)=>{if(!get().customThemes[id])return;const customThemes={...get().customThemes};delete customThemes[id];set({customThemes});saveCustomThemes(customThemes);if(get().theme===id)get().setTheme('light')},
+  setNodeTint:(id,tint)=>{get().update(c=>{const n=c.nodes[id];if(!n)return;n.tint=tint;n.updatedAt=Date.now()});set({lastMarkedId:id});setTimeout(()=>set({lastMarkedId:null}),1800)},
+  setNodeStyle:(id,style)=>{get().update(c=>{const n=c.nodes[id];if(!n)return;if(style===undefined){delete n.style;}else{n.style=style;}n.updatedAt=Date.now()})},
+  setNodeStatus:(id,status)=>{get().update(c=>{const n=c.nodes[id];if(!n)return;n.status=status;n.updatedAt=Date.now()});set({lastMarkedId:id});setTimeout(()=>set({lastMarkedId:null}),1800)},
+  createConnection:(a,b)=>{if(a===b)return;const c=get().canvas;if(!c||!c.nodes[a]||!c.nodes[b])return;const pair=[a,b].sort() as[string,string];get().update(x=>{if((x.connections??[]).some(cn=>cn.a===pair[0]&&cn.b===pair[1]))return;x.connections=[...(x.connections??[]),{a:pair[0],b:pair[1]}]})},
+  removeConnection:(a,b)=>{const c=get().canvas;if(!c)return;const pair=[a,b].sort() as[string,string];get().update(x=>{x.connections=(x.connections??[]).filter(cn=>!(cn.a===pair[0]&&cn.b===pair[1]))})},
+  setNodeSize:(id,size)=>set(s=>{if(!s.canvas)return s;const nodes={...s.canvas.nodes};const existing=nodes[id];if(!existing)return s;nodes[id]={...existing,size,updatedAt:Date.now()};return {canvas:{...s.canvas,nodes}}}),
+  duplicateNode:(id)=>{
+    const c=get().canvas;if(!c||!c.nodes[id])return;
+    const src=c.nodes[id];const t=Date.now();
+    const offset=Math.max(NODE_WIDTH,src.size?.width??NODE_WIDTH)+20;
+    get().update(cn=>{
+      const nid=crypto.randomUUID();
+      cn.nodes[nid]=makeNode(nid,src.content,src.parentId,{x:src.position.x+offset,y:src.position.y+offset});
+      cn.nodes[nid].status=src.status;
+      if(src.tint)cn.nodes[nid].tint=src.tint;
+      if(src.size)cn.nodes[nid].size={...src.size};
+      // Presentation order is NOT copied — new node is not part of presentation
+      if(src.doc)cn.nodes[nid].doc=structuredClone(src.doc);
+      cn.nodes[nid].createdAt=t;
+      cn.nodes[nid].updatedAt=t;
+    })
+  },
+  addToPresentation:(id)=>{
+    get().update(c=>{
+      const n=c.nodes[id];if(!n)return;
+      if(typeof n.presentationOrder==='number')return; // already marked
+      const max=Math.max(0,...Object.values(c.nodes).map(x=>typeof x.presentationOrder==='number'&&Number.isFinite(x.presentationOrder)?x.presentationOrder:0));
+      n.presentationOrder=max+1;
+      n.updatedAt=Date.now();
+    })
+  },
+  removeFromPresentation:(id)=>{
+    get().update(c=>{
+      const n=c.nodes[id];if(!n)return;
+      if(typeof n.presentationOrder!=='number')return;
+      delete n.presentationOrder;
+      n.updatedAt=Date.now();
+      normalizePresentationOrderInPlace(c.nodes);
+    })
+  },
+  // For 1C path authoring — reorder without touching graph
+  // Future extensible to support frames and branching
+  // This is the smallest safe implementation for explicit path
+  reorderPresentation:(draggedId:string, targetIndex:number)=>{
+    get().update(c=>{
+      const nodes=c.nodes;
+      const ordered=Object.values(nodes)
+        .filter(n=>typeof n.presentationOrder==='number'&&Number.isFinite(n.presentationOrder))
+        .sort((a,b)=>a.presentationOrder!-b.presentationOrder!);
+      const fromIdx=ordered.findIndex(n=>n.id===draggedId);
+      if(fromIdx===-1)return;
+      const clamped=Math.max(0,Math.min(targetIndex,ordered.length-1));
+      if(fromIdx===clamped)return;
+      const [moved]=ordered.splice(fromIdx,1);
+      ordered.splice(clamped,0,moved);
+      ordered.forEach((node, idx)=>{
+        node.presentationOrder=idx+1;
+        node.updatedAt=Date.now();
+      });
+    })
+  },
+  replaceCanvasContents:(name,nodes,viewport,annotations)=>{
+    const cur=get().canvas;if(!cur)return;
+    const canvas={...cur,name,nodes:structuredClone(nodes) as Record<string,Node>,viewport:{...viewport},connections:[],...(annotations?{annotations:[...annotations]}:{}),updatedAt:Date.now()};
+    clearTimeout(timer);timer=setTimeout(()=>{saveCanvas(canvas);get().flashSaved()},400);
+    set({canvas,editingId:null,justCreatedId:null,selectedNodeIds:[],past:[],future:[]})
+  },
+  loadIndex:()=>{if(get().index!==null)return;const index=loadPersistedIndex();set({index})},
+  openPage:(id)=>{get().loadIndex();const canvas=loadOrCreateCanvas(id);set({canvas,editingId:null,justCreatedId:null,selectedNodeIds:[],past:[],future:[]})},
+  setSidebarOpen:(open)=>set({sidebarOpen:open}),
+  setHelpOpen:(open)=>set({helpOpen:open}),
+  toggleHelp:()=>set(s=>({helpOpen:!s.helpOpen})),
+  addFolder:(name)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx) return;}const result=createFolder(idx,name,null);saveIndex(result.index);set({index:result.index})},
+  addPage:(name,folderId)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx) return '';}const result=createPageMeta(idx,name,folderId);if(!result.page.id) return '';saveIndex(result.index);set({index:result.index});return result.page.id},
+  renamePage:(id,name)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx) return;}const trimmed=name.trim();if(!trimmed) return;const next=renamePageOp(idx,id,trimmed);if(next===idx) return;saveIndex(next);set({index:next});updateCanvasName(id,trimmed);if(get().canvas?.id===id){get().update(c=>{c.name=trimmed})}},
+  renameFolder:(id,name)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx) return;}const trimmed=name.trim();if(!trimmed) return;const next=renameFolderOp(idx,id,trimmed);if(next===idx) return;saveIndex(next);set({index:next})},
+  deletePage:(id)=>{if(id==='default') return;let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx) return;}const next=deletePageMeta(idx,id);if(next===idx) return;saveIndex(next);set({index:next});deleteCanvasData(id)},
+  deleteFolder:(id)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx)return;}const next=deleteFolderOp(idx,id);if(next===idx)return;saveIndex(next);set({index:next})},
+  movePageToFolder:(pageId,folderId)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx)return;}const next=movePageOp(idx,pageId,folderId);if(next===idx)return;saveIndex(next);set({index:next})},
+  toggleFolderPin:(id)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx)return;}const next=toggleFolderPinned(idx,id);if(next===idx)return;saveIndex(next);set({index:next})},
+  togglePagePin:(id)=>{let idx=get().index;if(!idx){get().loadIndex();idx=get().index;if(!idx)return;}const next=togglePagePinned(idx,id);if(next===idx)return;saveIndex(next);set({index:next})},
+  moveNodes:(moves)=>{if(!moves.length)return;get().update(c=>{moves.forEach(m=>{const n=c.nodes[m.id];if(n){n.position=m.position;n.updatedAt=Date.now()}})})},
+  moveNodesLive:(moves)=>{if(!moves.length)return;set(s=>{if(!s.canvas)return s;const c=structuredClone(s.canvas);moves.forEach(m=>{const n=c.nodes[m.id];if(n){n.position=m.position;n.updatedAt=Date.now()}});c.updatedAt=Date.now();clearTimeout(timer);timer=setTimeout(()=>{saveCanvas(c);get().flashSaved()},400);return {canvas:c}})},
+  selectForInteraction:(id)=>set(s=>s.selectedNodeIds.includes(id)?s:{selectedNodeIds:[id]}),
+  selectNodes:(ids)=>set({selectedNodeIds:ids}),
+  selectNode:(id)=>set({selectedNodeIds:[id]}),
+  clearSelection:()=>set({selectedNodeIds:[]}),
+  recordHistory:()=>{const c=get().canvas;if(!c) return;const snap:Snapshot={nodes:cloneNodes(c.nodes),annotations:(c.annotations??[]).map(a=>({...a}))};set(s=>{const past=[...s.past,snap];if(past.length>MAX_HISTORY) past.shift();return {past,future:[]}})},
+  undo:()=>set(s=>{if(!s.canvas||s.past.length===0) return s;const past=[...s.past];const snap=past.pop()!;const future=[...s.future,{nodes:cloneNodes(s.canvas.nodes),annotations:(s.canvas.annotations??[]).map(a=>({...a}))}];if(future.length>MAX_HISTORY) future.shift();const canvas={...s.canvas!,nodes:snap.nodes,annotations:snap.annotations,updatedAt:Date.now()};clearTimeout(timer);timer=setTimeout(()=>{saveCanvas(canvas);get().flashSaved()},400);return {past,future,canvas,editingId:null,justCreatedId:null,selectedNodeIds:[]}}),
+  redo:()=>set(s=>{if(!s.canvas||s.future.length===0) return s;const future=[...s.future];const snap=future.pop()!;const past=[...s.past,{nodes:cloneNodes(s.canvas.nodes),annotations:(s.canvas.annotations??[]).map(a=>({...a}))}];if(past.length>MAX_HISTORY) past.shift();const canvas={...s.canvas!,nodes:snap.nodes,annotations:snap.annotations,updatedAt:Date.now()};clearTimeout(timer);timer=setTimeout(()=>{saveCanvas(canvas);get().flashSaved()},400);return {past,future,canvas,editingId:null,justCreatedId:null,selectedNodeIds:[]}}),
+  clearHistory:()=>set({past:[],future:[]}),
+  toggleNode:(id)=>{const c=get().canvas;if(!c)return;const n=c.nodes[id];if(!n)return;const wasCollapsed=n.isCollapsed;get().update(x=>{x.nodes[id].isCollapsed=!x.nodes[id].isCollapsed});if(wasCollapsed){const revealed=visibleSubtree(c,id);if(revealed.length){set({revealIds:revealed});setTimeout(()=>set({revealIds:[]}),600)}}else{set({revealIds:[]})}},
+  expandAll:()=>{const c=get().canvas;if(!c)return;const collapsed=Object.values(c.nodes).filter(n=>n.isCollapsed&&children(c,n.id).length);if(!collapsed.length)return;const revealed:string[]=[],seen=new Set<string>();collapsed.forEach(n=>visibleSubtree(c,n.id).forEach(id=>{if(!seen.has(id)){seen.add(id);revealed.push(id)}}));get().update(x=>Object.values(x.nodes).forEach(n=>n.isCollapsed=false));if(revealed.length){set({revealIds:revealed});setTimeout(()=>set({revealIds:[]}),600)}},
+  collapseAll:()=>{get().update(c=>Object.values(c.nodes).forEach(n=>{if(children(c,n.id).length)n.isCollapsed=true}));set({revealIds:[]})},
+  applyTidy:()=>{const c=get().canvas;if(!c)return;if(!Object.keys(c.nodes).length)return;const moves=tidyPositions(c.nodes);if(!moves.length)return;get().update(x=>{moves.forEach(m=>{const n=x.nodes[m.id];if(n){n.position=m.position;n.updatedAt=Date.now()}})})},
+  init:(id,size)=>{let c=loadCanvas(id)||seed(id);if(!loadCanvas(id)){const ns=Object.values(c.nodes);const minX=Math.min(...ns.map(n=>n.position.x)),minY=Math.min(...ns.map(n=>n.position.y)),maxX=Math.max(...ns.map(n=>n.position.x+NODE_WIDTH)),maxY=Math.max(...ns.map(n=>n.position.y+NODE_MIN_HEIGHT));const z=Math.min((size.x-110)/(maxX-minX),(size.y-110)/(maxY-minY),1);c.viewport={zoom:z,x:(size.x-(maxX-minX)*z)/2-minX*z,y:(size.y-(maxY-minY)*z)/2-minY*z};saveCanvas(c)}if(Object.keys(c.nodes).length===0){c.viewport={x:0,y:0,zoom:1}}set({canvas:c,past:[],future:[]})},
+  update:(fn)=>set(s=>{
+    if(!s.canvas)return s;
+    const before:Snapshot={nodes:cloneNodes(s.canvas.nodes),annotations:(s.canvas.annotations??[]).map(a=>({...a}))};
+    const c=structuredClone(s.canvas);
+    fn(c);
+    c.updatedAt=Date.now();
+    const changed=JSON.stringify(before)!==JSON.stringify({nodes:c.nodes,annotations:c.annotations??[]});
+    clearTimeout(timer);timer=setTimeout(()=>{saveCanvas(c);get().flashSaved()},400);
+    if(!changed) return {canvas:c};
+    const past=[...s.past,before];if(past.length>MAX_HISTORY) past.shift();
+    return {canvas:c,past,future:[]}
+  }),
+  createRoot:(size)=>{
+    const c=get().canvas;if(!c)return;
+    const id=crypto.randomUUID(),r=roots(c).length*46,p={x:(size.x/2-c.viewport.x)/c.viewport.zoom-NODE_WIDTH/2+r,y:(size.y/2-c.viewport.y)/c.viewport.zoom-NODE_MIN_HEIGHT/2+r*.6};
+    get().update(x=>{x.nodes[id]=makeNode(id,'',null,p)});
+    set({editingId:id,justCreatedId:id});setTimeout(()=>set({justCreatedId:null}),5200)
+  },
+  createChild:(parentId)=>{
+    const c=get().canvas;if(!c)return;
+    const p=c.nodes[parentId],kids=children(c,parentId),id=crypto.randomUUID(),pos={x:p.position.x+HORIZONTAL_INDENT,y:kids.length?Math.max(...kids.map(n=>n.position.y))+NODE_MIN_HEIGHT+VERTICAL_GAP:p.position.y+NODE_MIN_HEIGHT+VERTICAL_GAP};
+    get().update(x=>{x.nodes[id]=makeNode(id,'',parentId,pos);x.nodes[parentId].isCollapsed=false});
+    set({editingId:id,selectedNodeIds:[id],justCreatedId:id});setTimeout(()=>set({justCreatedId:null}),5200)
+  },
+  createIndependentTopic:(fromId)=>{
+    const c=get().canvas;if(!c)return;const p=c.nodes[fromId];if(!p)return;
+    const id=crypto.randomUUID(),pos={x:p.position.x+NODE_WIDTH+80,y:p.position.y+60};
+    get().update(x=>{x.nodes[id]=makeNode(id,'',null,pos)});
+    set({editingId:id,selectedNodeIds:[id],justCreatedId:id});setTimeout(()=>set({justCreatedId:null}),5200)
+  },
+  createAnnotation:(kind,size)=>{
+    const c=get().canvas;if(!c)return;
+    const id=crypto.randomUUID(),vw=size??{x:window.innerWidth,y:window.innerHeight},pos={x:(vw.x/2-c.viewport.x)/c.viewport.zoom,y:(vw.y/2-c.viewport.y)/c.viewport.zoom};
+    get().update(x=>{x.annotations=[...(x.annotations??[]),{id,kind,content:'',position:pos,createdAt:Date.now(),updatedAt:Date.now()}]});set({justCreatedId:id});setTimeout(()=>set({justCreatedId:null}),5200)
+  },
+  updateAnnotation:(id,content)=>get().update(c=>{const a=(c.annotations??[]).find(x=>x.id===id);if(a){a.content=content;a.updatedAt=Date.now()}}),
+  deleteAnnotation:(id)=>get().update(c=>{c.annotations=(c.annotations??[]).filter(a=>a.id!==id)}),
+  moveAnnotation:(id,position)=>get().update(c=>{const a=(c.annotations??[]).find(x=>x.id===id);if(a){a.position={...position};a.updatedAt=Date.now()}}),
+  remove:(id)=>{
+    const c=get().canvas;if(!c) return;
+    const ids=new Set([id,...descendants(c,id)]);
+    get().update(c2=>{
+      const toRemove=[id,...descendants(c2,id)];
+      toRemove.forEach(x=>delete c2.nodes[x]);
+      c2.connections=c2.connections.filter(cn=>!toRemove.some(r=>cn.a===r||cn.b===r));
+      // If any removed node was part of presentation, reindex remaining
+      const hasPresentation = Object.values(c2.nodes).some(n=>typeof n.presentationOrder==='number');
+      if(hasPresentation) normalizePresentationOrderInPlace(c2.nodes);
+    });
+    set(s=>({selectedNodeIds:s.selectedNodeIds.filter(x=>!ids.has(x))}))
+  },
+  setEditing:(editingId)=>set({editingId}),
+  flashSaved:()=>{set({saved:true});clearTimeout(flash);flash=setTimeout(()=>set({saved:false}),1600)}
+}));
+
 if(typeof window!=='undefined')applyTheme(initialSettings.theme,initialCustomThemes);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

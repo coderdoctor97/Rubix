@@ -8,7 +8,7 @@ import Node from './Node';
 import Annotation from './Annotation';
 import Edges from './Edges';
 import Toolbar from './Toolbar';
-import SelectionHint from './SelectionHint';
+import PresentationBar from './PresentationBar';
 import {MagnifyingGlass,MagicWand,Plus,Minus} from '@phosphor-icons/react';
 import useStatusShortcuts from '@/hooks/useStatusShortcuts';
 import useHistoryShortcuts from '@/hooks/useHistoryShortcuts';
@@ -20,7 +20,7 @@ import ThemeToggle from './ThemeToggle';
 import ThemeManager from './ThemeManager';
 
 export default function Canvas({canvasId}:{canvasId:string}) {
-  const canvas=useCanvasStore(s=>s.canvas), init=useCanvasStore(s=>s.init), update=useCanvasStore(s=>s.update), createRoot=useCanvasStore(s=>s.createRoot), saved=useCanvasStore(s=>s.saved), clearSelection=useCanvasStore(s=>s.clearSelection), editingId=useCanvasStore(s=>s.editingId), recordHistory=useCanvasStore(s=>s.recordHistory), moveNodes=useCanvasStore(s=>s.moveNodes), moveNodesLive=useCanvasStore(s=>s.moveNodesLive), selectNodes=useCanvasStore(s=>s.selectNodes), createAnnotation=useCanvasStore(s=>s.createAnnotation), focusMode=useCanvasStore(s=>s.focusMode), setFocusMode=useCanvasStore(s=>s.setFocusMode), selectedNodeIds=useCanvasStore(s=>s.selectedNodeIds), justCreatedId=useCanvasStore(s=>s.justCreatedId), connectingFrom=useCanvasStore(s=>s.connectingFrom), mouseWorld=useCanvasStore(s=>s.mouseWorld), magneticTarget=useCanvasStore(s=>s.magneticTarget), setMagneticTarget=useCanvasStore(s=>s.setMagneticTarget), setConnectingFrom=useCanvasStore(s=>s.setConnectingFrom), selectedConnection=useCanvasStore(s=>s.selectedConnection), setSelectedConnection=useCanvasStore(s=>s.setSelectedConnection);
+  const canvas=useCanvasStore(s=>s.canvas), init=useCanvasStore(s=>s.init), update=useCanvasStore(s=>s.update), createRoot=useCanvasStore(s=>s.createRoot), saved=useCanvasStore(s=>s.saved), clearSelection=useCanvasStore(s=>s.clearSelection), editingId=useCanvasStore(s=>s.editingId), recordHistory=useCanvasStore(s=>s.recordHistory), moveNodes=useCanvasStore(s=>s.moveNodes), moveNodesLive=useCanvasStore(s=>s.moveNodesLive), selectNodes=useCanvasStore(s=>s.selectNodes), createAnnotation=useCanvasStore(s=>s.createAnnotation), focusMode=useCanvasStore(s=>s.focusMode), setFocusMode=useCanvasStore(s=>s.setFocusMode), presentationMode=useCanvasStore(s=>s.presentationMode), selectedNodeIds=useCanvasStore(s=>s.selectedNodeIds), justCreatedId=useCanvasStore(s=>s.justCreatedId), connectingFrom=useCanvasStore(s=>s.connectingFrom), mouseWorld=useCanvasStore(s=>s.mouseWorld), magneticTarget=useCanvasStore(s=>s.magneticTarget), setMagneticTarget=useCanvasStore(s=>s.setMagneticTarget), setConnectingFrom=useCanvasStore(s=>s.setConnectingFrom), selectedConnection=useCanvasStore(s=>s.selectedConnection), setSelectedConnection=useCanvasStore(s=>s.setSelectedConnection);
   const isMultiSelected=selectedNodeIds.length>1;
   const ref=useRef<HTMLDivElement>(null);
   const [themesOpen,setThemesOpen]=useState(false);
@@ -224,7 +224,7 @@ export default function Canvas({canvasId}:{canvasId:string}) {
     </div>
     <KnowledgeDialPanel />
     <HelpPanel />
-    <SelectionHint />
+    <PresentationBar />
     <ThemeManager open={themesOpen} onClose={()=>setThemesOpen(false)} />
     </>
   );

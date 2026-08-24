@@ -1,21 +1,8 @@
 'use client';
-import { useCanvasStore } from '@/lib/store';
-
+// SelectionHint removed per cleanup task — status shortcuts 1/2/3/0 disabled.
+// Previously showed "1 Failed · 2 Review · 3 Mastered · 0 Clear · Esc Deselect"
+// Now returns null so no empty placeholder remains in normal canvas or under Presentation HUD.
 export default function SelectionHint() {
-  const selectedNodeIds = useCanvasStore(s => s.selectedNodeIds);
-  const editingId = useCanvasStore(s => s.editingId);
-  if (selectedNodeIds.length === 0 || editingId !== null) return null;
-  return (
-    <div className="selection-hint" aria-live="polite" aria-atomic="true">
-      <span className="selection-hint-item"><b>1</b> Failed</span>
-      <span className="selection-hint-sep">·</span>
-      <span className="selection-hint-item"><b>2</b> Review</span>
-      <span className="selection-hint-sep">·</span>
-      <span className="selection-hint-item"><b>3</b> Mastered</span>
-      <span className="selection-hint-sep">·</span>
-      <span className="selection-hint-item"><b>0</b> Clear</span>
-      <span className="selection-hint-sep">·</span>
-      <span className="selection-hint-item"><b>Esc</b> Deselect</span>
-    </div>
-  );
+  return null;
 }
+
