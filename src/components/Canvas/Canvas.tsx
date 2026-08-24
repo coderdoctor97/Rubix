@@ -8,7 +8,6 @@ import Node from './Node';
 import Annotation from './Annotation';
 import Edges from './Edges';
 import Toolbar from './Toolbar';
-import SelectionHint from './SelectionHint';
 import PresentationBar from './PresentationBar';
 import {MagnifyingGlass,MagicWand,Plus,Minus} from '@phosphor-icons/react';
 import useStatusShortcuts from '@/hooks/useStatusShortcuts';
@@ -225,7 +224,6 @@ export default function Canvas({canvasId}:{canvasId:string}) {
     </div>
     <KnowledgeDialPanel />
     <HelpPanel />
-    <SelectionHint />
     <PresentationBar />
     <ThemeManager open={themesOpen} onClose={()=>setThemesOpen(false)} />
     </>
