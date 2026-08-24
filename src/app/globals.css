@@ -762,14 +762,13 @@ body.is-dragging * {
   }
 }
 
-/* ---- Node internals — CONTENT FIRST layout architecture ----
-   Root cause: status dot + chevron were flex items inside content flow,
-   stealing horizontal width and pushing text inward. Header controls
-   behaved as reserved columns instead of overlays.
-   Fix: content layer gets max space, chrome layer overlays around it.
-   - .node-main reserves small left/right padding but dot/chevron are absolute
-   - .node-content flexes full width
-   - Collapsed state becomes genuinely compact single row
+/* ---- Node internals — CONTENT FIRST + Part 1 & Part 3 fixes ----
+   Part 1 root cause: two render paths .node-content vs .node-editor-wrap with different
+   flex/overflow caused visibility shift on focus. Now single stable root .node-content-root
+   always exists, only inner read-only vs editable swaps inside same container. Outer card
+   overflow:visible so external UI escapes, inner .node-top/.node-main contain scroll.
+   Part 3: status dot + chevron are lightweight overlays at upper-left 4-6px from border,
+   no left padding to content, content width identical before/after.
 */
 .node-top {
   display: flex;
@@ -785,26 +784,56 @@ body.is-dragging * {
 .node-main {
   position: relative;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: stretch;
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
-  /* Reserve minimal space for overlay chrome, not large columns */
-  padding-left: 36px; /* 18px dot + 4px gap + 20px chevron */
-  padding-right: 32px; /* 28px more-btn + 4px */
-  padding-top: 2px;
+  /* Content gets max space — no left reserved column, only small top reserve */
+  padding: 0;
+  padding-top: 22px; /* reserve vertical space for overlay header (dot+chevron+menu) */
 }
 
-.node-main > .status-dot,
-.node-main > .chevron {
+.node-content-root {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Chrome layer — absolute overlay at upper-left/right, 4-6px breathing from border */
+.node-chrome {
   position: absolute;
-  top: 3px;
+  top: 4px;
+  left: 5px;
+  right: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 3;
+  pointer-events: none;
+  height: 20px;
 }
 
-.node-main > .status-dot { left: 0; }
-.node-main > .chevron { left: 20px; }
+.node-chrome-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+}
 
-/* Collapsed: genuinely compact single row */
+.node-ctx-controls {
+  position: relative;
+  top: auto;
+  right: auto;
+  z-index: 5;
+  pointer-events: auto;
+}
+
+/* Collapsed: genuinely compact single row, no large empty gap */
 .node-card.is-collapsed {
   --nc-min-h: 44px;
 }
@@ -815,9 +844,19 @@ body.is-dragging * {
 }
 
 .node-card.is-collapsed .node-main {
-  align-items: center;
-  min-height: 28px;
   padding-top: 0;
+  min-height: 28px;
+  justify-content: center;
+}
+
+.node-card.is-collapsed .node-chrome {
+  top: 4px;
+  height: 20px;
+}
+
+.node-card.is-collapsed .node-content-root {
+  flex: 0 0 auto;
+  min-height: 0;
 }
 
 .node-card.is-collapsed .node-content {
@@ -842,28 +881,24 @@ body.is-dragging * {
   margin-top: 6px;
 }
 
-/* ---- Marker / status dot (original Synapse marking system) ----
-   Restored + hardened for V2 materials: visible on classic/sticky/paper/highlight/minimal,
-   light + dark, tinted + untinted. None = hollow neutral, Failed/Review/Mastered = solid
-   with surface halo for separation from tinted backgrounds. */
+/* ---- Marker / status dot — Part 2 simplified: flat dot, no white ring/halo ----
+   Remove white/surface border/ring, simple flat ●, keep colours, hover/focus, smaller. */
 .status-dot {
-  flex: 0 0 auto;
-  width: 18px;
-  height: 18px;
-  margin-top: 0;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  border: 2px solid var(--line-2);
-  background: var(--surface);
+  border: none;
+  background: var(--line-2);
   padding: 0;
   cursor: pointer;
-  box-shadow: 0 0 0 1px var(--surface);
-  transition: transform 0.14s var(--ease-out), background 0.15s var(--ease-out), border-color 0.15s var(--ease-out), box-shadow 0.15s var(--ease-out);
+  flex: 0 0 auto;
+  transition: transform 0.14s var(--ease-out), background 0.15s var(--ease-out), opacity 0.15s var(--ease-out);
   z-index: 2;
 }
 
 .status-dot:hover {
-  transform: scale(1.18);
-  box-shadow: 0 0 0 1px var(--surface), 0 2px 6px -1px oklch(28% 0.015 55 / 0.18);
+  transform: scale(1.32);
+  opacity: 0.92;
 }
 
 .status-dot:focus-visible {
@@ -872,37 +907,24 @@ body.is-dragging * {
 }
 
 .status-dot.dot-none {
-  background: var(--surface);
-  border-color: var(--line-2);
-  box-shadow: 0 0 0 1px var(--surface);
+  background: var(--line-2);
+  opacity: 0.65;
 }
 
 .status-dot.dot-failed {
   background: var(--danger);
-  border-color: var(--surface);
-  box-shadow: 0 0 0 1px var(--surface), 0 1px 3px oklch(28% 0.015 55 / 0.18);
 }
 
 .status-dot.dot-review {
   background: var(--warning);
-  border-color: var(--surface);
-  box-shadow: 0 0 0 1px var(--surface), 0 1px 3px oklch(28% 0.015 55 / 0.18);
 }
 
 .status-dot.dot-mastered {
   background: var(--success);
-  border-color: var(--surface);
-  box-shadow: 0 0 0 1px var(--surface), 0 1px 3px oklch(28% 0.015 55 / 0.18);
 }
 
-/* Ensure dot remains visible on transparent minimal cards */
 .style-minimal .status-dot {
-  box-shadow: 0 0 0 1px var(--surface), 0 0 0 2px var(--line);
-}
-.style-minimal .status-dot.dot-failed,
-.style-minimal .status-dot.dot-review,
-.style-minimal .status-dot.dot-mastered {
-  box-shadow: 0 0 0 1px var(--surface), 0 0 0 2px var(--surface), 0 1px 3px oklch(28% 0.015 55 / 0.18);
+  opacity: 0.9;
 }
 
 /* ---- Presentation sequence marker (SYSTEM C) — separate from status (SYSTEM A) ----

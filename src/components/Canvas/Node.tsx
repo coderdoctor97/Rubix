@@ -27,7 +27,8 @@ function splitFirstLine(text: string): { first: string; rest: string | null } {
 }
 
 function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string[];viewportZoom:number}) {
-  const editing=useCanvasStore(s=>s.editingId);
+  const editingId=useCanvasStore(s=>s.editingId);
+  const editing=editingId;
   const just=useCanvasStore(s=>s.justCreatedId);
   const isSelected=useCanvasStore(s=>s.selectedNodeIds.includes(node.id));
   const allNodes=useCanvasStore(s=>s.canvas?.nodes??{});
@@ -53,6 +54,7 @@ function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string
   const toggleNode=useCanvasStore(s=>s.toggleNode);
   const addToPresentation=useCanvasStore(s=>s.addToPresentation);
   const removeFromPresentation=useCanvasStore(s=>s.removeFromPresentation);
+  const presentationMode=useCanvasStore(s=>s.presentationMode);
   const revealIds=useCanvasStore(s=>s.revealIds);
   const setHoverId=useCanvasStore(s=>s.setHoverId);
   const [menuOpen,setMenuOpen]=useState(false);
@@ -148,7 +150,9 @@ function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string
 
   const styleClass=node.style?`style-${node.style}`:'';
   const richHTML=useMemo(()=>node.doc?docToHTML(node.doc):'',[node.doc]);
-  const editor=editing===node.id ? <RichEditor doc={node.doc} plain={node.content} onCommit={commitRich} /> : <div className="node-content" onPointerDownCapture={e=>e.stopPropagation()} onClick={()=>setEditing(node.id)}>{(node.doc && node.content.trim()) ? <div className="node-rt" dangerouslySetInnerHTML={{__html:richHTML}} /> : (formattedContent? <><span className="node-title-line">{renderFormatted(firstLine)}</span>{restLines!=null&&<span className="node-body-line">{renderFormatted(restLines)}</span>}</> : "What's this about?")}</div>;
+  const isEditing = editing===node.id;
+  const isPresentation = typeof node.presentationOrder === 'number' && Number.isFinite(node.presentationOrder);
+  const showPresentationBadge = isPresentation && presentationMode;
 
   const revealIndex=revealIds.indexOf(node.id);
   const isRevealing=revealIndex>=0;
@@ -159,7 +163,7 @@ function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string
   const onNodeDragStart=(e:PointerEvent)=>{
     if(e.button!==0)return;
     const target=e.target as HTMLElement;
-    if(target.closest('button, [role="button"], a, input, textarea, select, .node-content'))return;
+    if(target.closest('button, [role="button"], a, input, textarea, select, .node-content, .node-content-root, .ProseMirror'))return;
     const ids=[node.id];
     const origins:Record<string,{x:number;y:number}>={};
     ids.forEach(id=>{const n=allNodes[id];if(n)origins[id]={x:n.position.x,y:n.position.y};});
@@ -183,14 +187,32 @@ function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string
     isDraggingNode.current=false;
   };
 
-  const presentationMode = useCanvasStore(s=>s.presentationMode);
-  const isPresentation = typeof node.presentationOrder === 'number' && Number.isFinite(node.presentationOrder);
-  const showPresentationBadge = isPresentation && presentationMode;
+  // Single stable content root — does not mount/unmount on focus change
+  const contentRoot = (
+    <div className="node-content-root">
+      {isEditing ? (
+        <RichEditor doc={node.doc} plain={node.content} onCommit={commitRich} />
+      ) : (
+        <div className="node-content" onPointerDownCapture={e=>e.stopPropagation()} onClick={()=>setEditing(node.id)}>
+          {(node.doc && node.content.trim()) ? (
+            <div className="node-rt" dangerouslySetInnerHTML={{__html:richHTML}} />
+          ) : formattedContent ? (
+            <>
+              <span className="node-title-line">{renderFormatted(firstLine)}</span>
+              {restLines!=null&&<span className="node-body-line">{renderFormatted(restLines)}</span>}
+            </>
+          ) : (
+            "What's this about?"
+          )}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div
       ref={cardRef}
-      className={`node-card ${roleClass} ${styleClass} ${editing===node.id?'is-editing':''} ${just===node.id?'node-enter':''} ${node.tint?'is-tinted':''} ${isSelected?'is-selected':''} ${size?'is-sized':''} ${isRevealing?'node-reveal':''} ${magneticTarget===node.id?'node-magnet-target':''} ${isPresentation?'is-presentation':''} ${showPresentationBadge?'has-presentation-badge':''} ${node.isCollapsed?'is-collapsed':''}`}
+      className={`node-card ${roleClass} ${styleClass} ${isEditing?'is-editing':''} ${just===node.id?'node-enter':''} ${node.tint?'is-tinted':''} ${isSelected?'is-selected':''} ${size?'is-sized':''} ${isRevealing?'node-reveal':''} ${magneticTarget===node.id?'node-magnet-target':''} ${isPresentation?'is-presentation':''} ${showPresentationBadge?'has-presentation-badge':''} ${node.isCollapsed?'is-collapsed':''}`}
       style={cardStyle}
       onPointerDownCapture={e=>{if(e.button===0&&!isSelected)selectForInteraction(node.id)}}
       onPointerEnter={e=>{if(window.matchMedia('(hover: hover)').matches)setHoverId(node.id)}}
@@ -206,47 +228,52 @@ function NodeInner({node, childIds, viewportZoom}:{node:NodeType;childIds:string
         </div>
       )}
       {isRoot(node)&&<div className="nc-accent-top" aria-hidden="true" />}
-      <div className="node-ctx-controls">
-        <button className={`more-btn ${menuOpen?'is-active':''}`} onClick={e=>{e.stopPropagation();setPaletteOpen(false);setStyleOpen(false);setMenuOpen(v=>!v)}} aria-label="Node options" title="Options">
-          <DotsThree size={16} weight="bold" aria-hidden="true" />
-        </button>
-        {menuOpen&&(
-          <div className="node-menu" onClick={e=>e.stopPropagation()}>
-            <button className="node-menu-item" onClick={()=>{setMenuOpen(false);setPaletteOpen(true)}}>
-              <span className="node-menu-label">Node colour</span>
-              <span className="node-menu-arrow" style={{background:node.tint||'#888'}} />
-            </button>
-            <button className="node-menu-item" onClick={()=>{setMenuOpen(false);setStyleOpen(true)}}>
-              <span className="node-menu-label">Node style</span>
-              <span className="node-menu-arrow">{node.style||'classic'}</span>
-            </button>
-            <div className="node-menu-sep" />
-            {!isPresentation ? (
-              <button className="node-menu-item" onClick={()=>{setMenuOpen(false);addToPresentation(node.id)}}>
-                <span className="node-menu-label">Add to presentation</span>
+      {/* Chrome layer — lightweight overlays, not consuming content width */}
+      <div className="node-chrome">
+        <div className="node-chrome-left">
+          <StatusBadge status={node.status} onClick={cycle}/>
+          {childIds.length>0&&<button className={`chevron ${node.isCollapsed?'':'open'}`} onClick={e=>{e.stopPropagation();toggleNode(node.id)}} aria-label={node.isCollapsed?'Expand':'Collapse'}><CaretRight size={16} weight="regular" aria-hidden="true" /></button>}
+        </div>
+        <div className="node-ctx-controls">
+          <button className={`more-btn ${menuOpen?'is-active':''}`} onClick={e=>{e.stopPropagation();setPaletteOpen(false);setStyleOpen(false);setMenuOpen(v=>!v)}} aria-label="Node options" title="Options">
+            <DotsThree size={16} weight="bold" aria-hidden="true" />
+          </button>
+          {menuOpen&&(
+            <div className="node-menu" onClick={e=>e.stopPropagation()}>
+              <button className="node-menu-item" onClick={()=>{setMenuOpen(false);setPaletteOpen(true)}}>
+                <span className="node-menu-label">Node colour</span>
+                <span className="node-menu-arrow" style={{background:node.tint||'#888'}} />
               </button>
-            ) : (
-              <button className="node-menu-item" onClick={()=>{setMenuOpen(false);removeFromPresentation(node.id)}}>
-                <span className="node-menu-label">Remove from presentation</span>
-                <span className="node-menu-meta">{formatPresentationOrder(node.presentationOrder!)}</span>
+              <button className="node-menu-item" onClick={()=>{setMenuOpen(false);setStyleOpen(true)}}>
+                <span className="node-menu-label">Node style</span>
+                <span className="node-menu-arrow">{node.style||'classic'}</span>
               </button>
-            )}
-            <div className="node-menu-sep" />
-            <button className="node-menu-item" onClick={()=>{setMenuOpen(false);duplicateNode(node.id)}}>
-              <span className="node-menu-label">Duplicate</span>
-              <span className="node-menu-hint">⌘D</span>
-            </button>
-            <button className="node-menu-item node-menu-danger" onClick={()=>{setMenuOpen(false);if(!childIds.length||confirm('Delete this node and its descendants?'))remove(node.id)}}>
-              <span className="node-menu-label">Delete</span>
-            </button>
-          </div>
-        )}
+              <div className="node-menu-sep" />
+              {!isPresentation ? (
+                <button className="node-menu-item" onClick={()=>{setMenuOpen(false);addToPresentation(node.id)}}>
+                  <span className="node-menu-label">Add to presentation</span>
+                </button>
+              ) : (
+                <button className="node-menu-item" onClick={()=>{setMenuOpen(false);removeFromPresentation(node.id)}}>
+                  <span className="node-menu-label">Remove from presentation</span>
+                  <span className="node-menu-meta">{formatPresentationOrder(node.presentationOrder!)}</span>
+                </button>
+              )}
+              <div className="node-menu-sep" />
+              <button className="node-menu-item" onClick={()=>{setMenuOpen(false);duplicateNode(node.id)}}>
+                <span className="node-menu-label">Duplicate</span>
+                <span className="node-menu-hint">⌘D</span>
+              </button>
+              <button className="node-menu-item node-menu-danger" onClick={()=>{setMenuOpen(false);if(!childIds.length||confirm('Delete this node and its descendants?'))remove(node.id)}}>
+                <span className="node-menu-label">Delete</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       <div className="node-top">
         <div className="node-main">
-          <StatusBadge status={node.status} onClick={cycle}/>
-          {childIds.length>0&&<button className={`chevron ${node.isCollapsed?'':'open'}`} onClick={()=>toggleNode(node.id)} aria-label={node.isCollapsed?'Expand':'Collapse'}><CaretRight size={16} weight="regular" aria-hidden="true" /></button>}
-          {editor}
+          {contentRoot}
         </div>
       </div>
       {isRoot(node)&&<button className="node-action-add node-action-left" onClick={()=>createIndependentTopic(node.id)} aria-label="New topic" title="New topic"><Plus size={14} weight="regular" aria-hidden="true" /></button>}
