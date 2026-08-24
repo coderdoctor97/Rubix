@@ -3780,13 +3780,18 @@ body.is-dragging * {
 }
 
 /* ---- Node resize grip + is-sized layout fix ----
-   Blocking fix: when node has explicit size, content area scrolls internally,
-   meta stays fixed below content, grip stays separate with breathing room.
-   No text may flow under meta or grip. */
+   Blocking fix + Part A fix: external UI (⋯ menu, colour/style popovers, presentation badge,
+   + buttons, port) must escape node bounds even when resized.
+   Root cause was overflow:hidden on .node-card.is-sized which clipped absolute children.
+   Solution: outer card overflow:visible, inner .node-top/.node-main contain scroll. */
+.node-card {
+  overflow: visible;
+}
+
 .node-card.is-sized {
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* contain internal scroll */
+  overflow: visible; /* FIX: was hidden → clipped external menus/badges */
 }
 
 .node-card.is-sized .node-top {
