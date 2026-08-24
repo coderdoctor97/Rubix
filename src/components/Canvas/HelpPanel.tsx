@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import {useEffect,useRef} from 'react';
 import {useCanvasStore} from '@/lib/store';
-import {X} from '@phosphor-icons/react';
+import {X, Question} from '@phosphor-icons/react';
 
 export default function HelpPanel() {
  const open=useCanvasStore(s=>s.helpOpen), setHelpOpen=useCanvasStore(s=>s.setHelpOpen);
@@ -23,7 +23,7 @@ export default function HelpPanel() {
 
  return <>
   <button ref={triggerRef} type="button" className="faq-button" aria-label="Help and shortcuts" onClick={event=>{event.stopPropagation();setHelpOpen(true)}} onPointerDown={event=>event.stopPropagation()}>
-    <svg viewBox="0 0 24 24" aria-hidden="true"><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="16" font-weight="800" font-family="Sora, Inter, system-ui, sans-serif" style={{fill:'var(--on-accent)'}}>?</text></svg>
+    <Question size={24} weight="bold" aria-hidden="true" />
   </button>
   {open&&<div className="help-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title" onClick={event=>{event.stopPropagation();if(event.target===event.currentTarget)setHelpOpen(false)}} onPointerDown={event=>event.stopPropagation()}>
    <div className="help-modal" onClick={event=>event.stopPropagation()} onPointerDown={event=>event.stopPropagation()}>

@@ -83,7 +83,7 @@ export default function KnowledgeDialPanel() {
   // With Failed=1, Review=1, Mastered=1, Untagged=2: T=5, C≈289.03
   // dashes = 57.81, 57.81, 57.81, 115.62 → sum = 289.05 ≈ C
 
-  const left = sidebarOpen ? '276px' : '56px';
+  const left = sidebarOpen ? '280px' : '72px';
 
   // ── Mini donut ──────────────────────────────────────────────
   if (heatmapMode === 'mini') {

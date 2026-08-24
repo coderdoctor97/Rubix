@@ -1,9 +1,12 @@
 'use client';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useCanvasStore } from '@/lib/store';
 import { serializeCanvas } from '@/lib/portability';
 import { exportCanvasPng } from '@/lib/exportPng';
-import { ImageSquare, FileCode } from '@phosphor-icons/react';
+import { exportCanvasPdf } from '@/lib/exportPdf';
+import { ImageSquare, FileCode, FilePdf } from '@phosphor-icons/react';
+
+type PdfState = 'idle' | 'exporting' | 'done' | 'error';
 
 function JsonIcon() {
   return (
@@ -13,6 +16,7 @@ function JsonIcon() {
 
 export default function ExportModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const canvas = useCanvasStore(s => s.canvas);
+  const [pdfState, setPdfState] = useState<PdfState>('idle');
 
   const onExportJson = useCallback(() => {
     if (!canvas) return;
@@ -38,6 +42,22 @@ export default function ExportModal({ open, onClose }: { open: boolean; onClose:
     }
     onClose();
   }, [onClose]);
+
+  const onExportPdf = useCallback(async () => {
+    if (pdfState === 'exporting') return; // prevent accidental double-export
+    setPdfState('exporting');
+    try {
+      await exportCanvasPdf();
+      setPdfState('done');
+      window.setTimeout(() => { setPdfState('idle'); onClose(); }, 950);
+    } catch {
+      // stay open so the user can retry; never leave the UI stuck "loading"
+      setPdfState('error');
+    }
+  }, [pdfState, onClose]);
+
+  // Reset transient PDF feedback whenever the modal is (re)opened.
+  useEffect(() => { if (!open) setPdfState('idle'); }, [open]);
 
   // Escape key closes modal
   useEffect(() => {
@@ -80,6 +100,32 @@ export default function ExportModal({ open, onClose }: { open: boolean; onClose:
             <div className="export-option-text">
               <span className="export-option-label">Export as PNG</span>
               <span className="export-option-sub">Best for embedding into PPT, PDF, documents, and notes.</span>
+            </div>
+          </button>
+          <button
+            className={`export-option-card${pdfState === 'exporting' ? ' is-busy' : ''}${pdfState === 'done' ? ' is-done' : ''}${pdfState === 'error' ? ' is-error' : ''}`}
+            onClick={onExportPdf}
+            disabled={pdfState === 'exporting' || pdfState === 'done'}
+            aria-busy={pdfState === 'exporting'}
+          >
+            <div className="export-option-icon">
+              {pdfState === 'exporting'
+                ? <span className="export-spinner" role="status" aria-label="Exporting PDF" />
+                : <FilePdf size={24} weight="duotone" color="var(--on-accent)" />}
+            </div>
+            <div className="export-option-text">
+              <span className="export-option-label">
+                {pdfState === 'exporting' ? 'Exporting PDF…' : pdfState === 'done' ? 'PDF exported' : pdfState === 'error' ? 'PDF export failed' : 'Export as PDF'}
+              </span>
+              <span className="export-option-sub">
+                {pdfState === 'exporting'
+                  ? 'Rendering the full canvas…'
+                  : pdfState === 'done'
+                    ? 'Your download has started.'
+                    : pdfState === 'error'
+                      ? 'Something went wrong. Tap to try again.'
+                      : 'Best for a fixed, shareable snapshot of the whole canvas.'}
+              </span>
             </div>
           </button>
         </div>

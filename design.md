@@ -8,7 +8,7 @@
 ## Hallmark Stamp
 
 ```
-/* Hallmark · genre: modern-minimal · tone: utilitarian · anchor hue: indigo · design-system: design.md · designed-as-app */
+/* Hallmark · genre: modern-minimal · tone: utilitarian · anchor hue: amber oklch(58% 0.155 52) · paper: warm oklch(94.5% 0.012 70) · design-system: design.md · designed-as-app · pre-emit critique: P5 H5 E5 S5 R5 V5 · contrast: pass (40–41) · tokens: pass (48) */
 ```
 
 ---
@@ -17,14 +17,14 @@
 
 | Signal | Value | Source |
 |---|---|---|
-| Font stack | Inter (400, 500, 600, 700) + Sora (600, 700) | `src/app/globals.css` lines 1–6, `@import` CDN |
+| Font stack | IBM Plex Sans (400/500/600/700) + Source Serif 4 (400/600) + IBM Plex Mono (400/500) | `src/app/globals.css` `@import` (Google Fonts css2) |
 | Palette | CSS custom-property tokens in `:root` + `[data-theme="dark"]` | `globals.css` lines 26–95 |
 | Motion | CSS transitions + keyframe animations; no motion library | globals.css; no `framer-motion`/`motion`/`gsps` in deps |
 | Spacing | Informal pixel values; no formal 4-pt scale yet (design system introduces it) | — |
 | Framework | Next.js 14 App Router | `package.json` |
 | Existing design doc | None — this file is created now | — |
 
-Hallmark will preserve: font stack (Inter body, Sora display), Next.js, plain CSS only.
+Hallmark will preserve: font stack (IBM Plex Sans body, Source Serif 4 display, IBM Plex Mono outlier), Next.js, plain CSS only.
 Hallmark will introduce: named spacing scale, motion discipline (named easings, reduced-motion), 8-state control matrix, frozen-token mapping, anti-slop commitments.
 
 ---
@@ -35,9 +35,9 @@ Hallmark will introduce: named spacing scale, motion discipline (named easings, 
 |---|---|---|
 | **Genre** | **modern-minimal** | Synapse is a precision tool for active recall — structured, disciplined, no decoration for its own sake. Stripe / Linear / Obsidian school. |
 | **Tone extreme** | **utilitarian** | Every pixel serves the study task. Restraint is the aesthetic. Decorative motion is a distraction, not a feature. "Clean and modern" is not a tone — this is. |
-| **Paper band** | Light: #e7ebf3 (cool grey) · Dark: #10151f (deep navy) | Cool, desaturated. Neither warm nor dramatic. |
-| **Display style** | Grotesque sans (Sora 700, -0.01em tracking) | Geometric, precise, readable at small sizes. One display face only, used for brand name and empty-state heading. |
-| **Accent hue family** | **Indigo** (H≈240°) — single accent, no second brand hue | `--accent: #4f46e5` (light) / `--accent: #8b93f8` (dark). `--brand-secondary` is retired from visual use (preserved as a token for backward compat; see §6). |
+| **Paper band** | Light: oklch(94.5% 0.012 70) (warm paper) · Dark: oklch(15% 0.012 60) (deep warm) | Warm-tinted toward the anchor hue. Never zero-chroma grey (v2). |
+| **Display style** | Modern transitional serif (Source Serif 4 600, -0.018em tracking) | Calm, scholarly authority. Main-node concept titles + workspace/empty/help headings only — serif-vs-sans is the hierarchy. |
+| **Accent hue family** | **Amber / ochre** (oklch ≈ 58% 0.155 52) — single warm anchor, no second brand hue | `--accent: oklch(58% 0.155 52)` (light) / `oklch(72% 0.13 55)` (dark). Chosen to escape the AI-default indigo and to literalise the Highlight object (a highlighter). `--brand-secondary` is aliased to `--accent`. |
 | **Accent role** | Action / selection / focus ring only. Never decorative. | CTA buttons, selected nodes, focus rings, active palette swatch. |
 | **Motion stance** | Counter (150 ms) · state-lift (200 ms) · panel-enter (220 ms ease-out, no overshoot) | All durations ≤ 220 ms. Overshoot (bounce, jello) is forbidden on any UI state transition. `prefers-reduced-motion: reduce` disables all decorative animation. |
 | **Icon voice** | **Phosphor** (regular weight, 16 px for toolbar, 14 px for node actions) | `@phosphor-icons/react` only. One library, one weight, one stroke style. `aria-hidden="true"` on all decorative icons. |
@@ -47,6 +47,8 @@ Hallmark will introduce: named spacing scale, motion discipline (named easings, 
 ---
 
 ## 2. Type Scale
+
+> **v3 — Hallmark typography redesign:** fonts → IBM Plex Sans (body/UI) + Source Serif 4 (display) + IBM Plex Mono (outlier); body raised to 15px / leading 1.6 (reading-optimized); **serif main-node titles**; ratio scale + `--leading-*` / `--tracking-*` tokens. The px/font values in the table below are **superseded** — `src/app/globals.css` `:root` is the canonical source. Inter/Sora removed (Inter is the Hallmark-banned default).
 
 | Role | Face | Weight | Size | Line-height | Use |
 |---|---|---|---|---|---|
@@ -131,6 +133,8 @@ Border language:
 ## 6. Frozen-Token Mapping Table
 
 Tokens listed in `THEME_TOKENS` (`src/lib/types.ts` line 22) are a frozen API. Names must never be renamed or removed. Values may be retuned; new tokens may be added alongside.
+
+> **v2 — Hallmark color redesign:** every value has been retuned to a warm OKLCH system (anchor amber `oklch(58% 0.155 52)`; all neutrals warm-tinted; shadows warm-tinted). The legacy hex values in this table are **superseded** — `src/app/globals.css` `:root` / `[data-theme="dark"]` are the canonical OKLCH source of truth. `--concept` / `--concept-soft` retired; `--brand-secondary` aliased to `--accent`.
 
 | Token name | Role | Light value | Dark value |
 |---|---|---|---|
@@ -252,14 +256,22 @@ Focus ring rule: `outline` appears instantly with zero transition duration. Focu
 | `.help-overlay` | `var(--help-overlay)` + `backdrop-filter: blur(3px)` | Yes |
 | `.theme-manager-overlay` | `var(--help-overlay)` + `backdrop-filter: blur(3px)` | Yes |
 
-### 9.4 Sidebar
+### 9.4 Sidebar — library navigation (expanded panel + compact rail + mobile drawer)
 
 | Property | Value |
 |---|---|
-| Background | `var(--surface)` |
-| Border | `border-inline-end: 1px solid var(--line)` (logical, not physical) |
-| Active page | `background: var(--accent-soft); color: var(--accent)` |
-| Hover row | `background: var(--hover)` |
+| Surface | `var(--surface-nav)` — deliberately quieter/darker than the canvas board (`--bg`) so the layering reads Sidebar → Canvas → Nodes |
+| Expanded width | 264px desktop (220px ≤1024; `min(86vw,320px)` ≤480 overlay drawer) |
+| Collapsed width | 56px compact visual-index rail (not a hidden sidebar) |
+| Border | `border-inline-end: 1px solid var(--line)` |
+| Active page | Marked-notebook treatment: `background: var(--accent-soft)` + inset 3px `var(--accent)` rail + `--ink` weight 600 + accent icon (never a bright pill) |
+| Context folder | quiet warm wash `color-mix(--accent-soft 55%, transparent)` |
+| Hover row | `background: var(--hover)` (transparent at rest — never bordered cards) |
+| Collapse transition | width + flex-basis 200ms `--ease-out`; rail stays stable; `prefers-reduced-motion` → snap |
+| Collapsed rail mark active | accent rail + accent icon (orientation preserved); hover/focus peek tooltip (800ms hover / 0ms focus) |
+| Sections | Pinned (surfaces existing `pinned` flags) · Recent (top by `updatedAt`) · Folders · Quick Notes |
+| Create | single primary "Quick note" at footer + ghost "New folder"; removed the dual top toolbar |
+| Mobile (≤768) | expanded = overlay drawer + scrim (tap-outside / Escape dismiss); collapsed rail stays in-flow |
 
 ---
 
@@ -307,7 +319,7 @@ All decorative icons carry `aria-hidden="true"`. All icon-only buttons carry `ar
 
 4. **Tinted near-black/near-white, not pure.** Surfaces use `#10151f` (dark bg) and `#e7ebf3` (light bg) — both are tinted. `#000` and `#fff` appear only as `--on-accent` text fill where required for contrast.
 
-5. **Roman headings only.** No italic on any heading, brand name, or display text. `Sora` at weight 700, `font-style: normal`. Italic survives only as `<em>` inside body-copy paragraphs.
+5. **Roman headings only.** No italic on any heading, brand name, or display text. `Source Serif 4` at weight 600, `font-style: normal`. Italic survives only as `<em>` inside body-copy paragraphs.
 
 6. **Tabular-nums on numeric readouts.** `#zoom-label`, `.dial-legend-val`, and node count chips all use `font-variant-numeric: tabular-nums`.
 
