@@ -1058,6 +1058,166 @@ body.is-dragging * {
   .presentation-bar-exit { padding: 5px 9px; font-size: 11px; }
 }
 
+/* Presentation path authoring strip — 1C */
+.presentation-bar {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  border-radius: var(--radius-lg);
+  max-width: min(92vw, 720px);
+  overflow: hidden;
+}
+
+.presentation-bar-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px 8px 14px;
+}
+
+.presentation-path-strip {
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 92%, var(--panel-bg));
+  padding: 8px 10px;
+}
+
+.presentation-path-scroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  padding-bottom: 2px;
+}
+
+.presentation-path-scroll::-webkit-scrollbar { height: 4px; }
+.presentation-path-scroll::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; }
+
+.presentation-path-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px 5px 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-2);
+  white-space: nowrap;
+  cursor: grab;
+  flex: 0 0 auto;
+  transition: background 0.12s var(--ease-out), border-color 0.12s var(--ease-out), transform 0.1s var(--ease-out), box-shadow 0.12s var(--ease-out);
+  max-width: 200px;
+}
+
+.presentation-path-pill:hover {
+  background: var(--hover);
+  border-color: var(--line-2);
+  box-shadow: var(--shadow-xs);
+}
+
+.presentation-path-pill.is-dragging {
+  opacity: 0.5;
+  transform: scale(0.97);
+}
+
+.path-pill-order {
+  min-width: 20px;
+  height: 18px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  color: var(--surface);
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+}
+
+.path-pill-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 110px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.path-pill-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+  flex: 0 0 auto;
+}
+
+.path-pill-move {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-xs);
+  color: var(--muted);
+  transition: background 0.1s var(--ease-out), color 0.1s var(--ease-out);
+}
+
+.path-pill-move:hover:not(:disabled) {
+  background: var(--chip-bg);
+  color: var(--ink-2);
+}
+
+.path-pill-move:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.path-pill-remove {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  color: var(--faint);
+  transition: background 0.1s var(--ease-out), color 0.1s var(--ease-out);
+}
+
+.path-pill-remove:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.presentation-path-empty {
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 92%, var(--panel-bg));
+}
+
+.presentation-path-empty code {
+  font-family: var(--font-mono);
+  background: var(--chip-bg);
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.presentation-path-empty em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
 /* ---- Collapsed-branch metadata chips ----
    Blocking fix: dedicated compact layout region, never overlapped by text.
    No separator line — distinction via spacing/typography/chip styling.

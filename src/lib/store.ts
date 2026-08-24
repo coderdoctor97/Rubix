@@ -54,6 +54,7 @@ type State={
   duplicateNode:(id:string)=>void;
   addToPresentation:(id:string)=>void;
   removeFromPresentation:(id:string)=>void;
+  reorderPresentation:(draggedId:string, targetIndex:number)=>void;
   replaceCanvasContents:(name:string,nodes:Record<string,Node>,viewport:{x:number;y:number;zoom:number},annotations?:Annotation[])=>void;
   setEditing:(id:string|null)=>void;
   flashSaved:()=>void;
@@ -171,6 +172,27 @@ export const useCanvasStore=create<State>((set,get)=>({
       delete n.presentationOrder;
       n.updatedAt=Date.now();
       normalizePresentationOrderInPlace(c.nodes);
+    })
+  },
+  // For 1C path authoring — reorder without touching graph
+  // Future extensible to support frames and branching
+  // This is the smallest safe implementation for explicit path
+  reorderPresentation:(draggedId:string, targetIndex:number)=>{
+    get().update(c=>{
+      const nodes=c.nodes;
+      const ordered=Object.values(nodes)
+        .filter(n=>typeof n.presentationOrder==='number'&&Number.isFinite(n.presentationOrder))
+        .sort((a,b)=>a.presentationOrder!-b.presentationOrder!);
+      const fromIdx=ordered.findIndex(n=>n.id===draggedId);
+      if(fromIdx===-1)return;
+      const clamped=Math.max(0,Math.min(targetIndex,ordered.length-1));
+      if(fromIdx===clamped)return;
+      const [moved]=ordered.splice(fromIdx,1);
+      ordered.splice(clamped,0,moved);
+      ordered.forEach((node, idx)=>{
+        node.presentationOrder=idx+1;
+        node.updatedAt=Date.now();
+      });
     })
   },
   replaceCanvasContents:(name,nodes,viewport,annotations)=>{
